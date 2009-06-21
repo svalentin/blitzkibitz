@@ -446,6 +446,9 @@ int AlphaBeta(const Board &cboard, const int moveNr, const int depth, int alpha,
     Board newboard;
     
     if (mvs.empty()) {
+        if (depth == 0) {
+            BestMove.flags = EGAL;
+        }
         if (cboard.sah == MAT || cboard.sah == SAH) {
             return -64000+depth;    // mate (the sooner the better)
         }

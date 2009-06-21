@@ -19,8 +19,8 @@ void XPlay(Board &board)
     Openings Op;
     Op.InitOpenings("openings.bk");
     
-    FILE *logf = fopen("sah-xboard.log", "wt");
-    FILE *loga = fopen("sah-adversar.log", "wt");
+    FILE *logf = fopen("BlitzKibitz-xboard.log", "wt");
+    FILE *loga = fopen("BlitzKibitz-oponent.log", "wt");
     setvbuf(logf, 0, _IONBF, 0);
     setvbuf(loga, 0, _IONBF, 0);
     
@@ -43,10 +43,15 @@ void XPlay(Board &board)
             m.flags = 0;
             m = DecodeACN(cbuffer, board);
 //            fprintf(logf, "DecodeACN finished with m.flags=%d\n", m.flags);
-            
-            if (m.flags == ERROR) {
+            if (m.sah == MAT) {
+                printf("resign\n");
+            }
+            else if (m.flags & ERROR) {
                 fprintf(logf, "%s\n", buffer.c_str());
-                if (buffer == "quit") break;
+                if (buffer == "quit") {
+                    fgets(cbuffer, 128, stdin); // make sure there is nothing more to get
+                    break;
+                }
                 else if (buffer == "new") {
                     // new game
                     // TODO: test it some more!
@@ -58,10 +63,6 @@ void XPlay(Board &board)
                 }
                 else if (buffer == "force") {
                     opponent = -1;
-                }
-                else if (buffer == "protover 2") {
-                    printf("feature san=1\n");
-                    printf("feature done=1\n");
                 }
                 else if (buffer == "go") {
                     //opponent = !board.player;
@@ -123,12 +124,27 @@ void XPlay(Board &board)
                 fprintf(logf, "Move #%d found in DB!\n", moveNr);
             }
             
-            string enc = EncodeACN(m, board);
-            fprintf(logf, "%s\n", enc.c_str());
-            printf("move %s\n", enc.c_str());
+            if (m.flags & EGAL) {
+                // I can't make any move
+                printf("1/2-1/2 {Stalemate}");
+                fprintf(logf, "Stalemate\n");
+                board.player = !board.player;
+            }
+            else {
+                string enc = EncodeACN(m, board);
+                fprintf(logf, "%s\n", enc.c_str());
+                printf("move %s\n", enc.c_str());
+                
+                if (m.sah == MAT) {
+                    printf("checkmate");
+                    board.MakeMove(m);
+                    board.player = !board.player;
+                    board.PrintBoard(logf);
+                }
+            }
         }
         
-        if (!(m.flags & ERROR)) {
+        if (!((m.flags & ERROR) || m.sah == MAT || (m.flags & EGAL))) {
             board.MakeMove(m);
             board.player = !board.player;
             board.PrintBoard(logf);
@@ -141,4 +157,5 @@ void XPlay(Board &board)
 
         fprintf(logf, "\n");
     }
+    fprintf(logf, "I'm done!\n");
 }
