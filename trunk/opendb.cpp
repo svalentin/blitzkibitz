@@ -10,7 +10,7 @@ void Openings::InitOpenings(const char *file_name)
 
     FILE *f = fopen(file_name, "r"); 
     if (f == NULL) {
-        printf("File %s not found, no opening database!\n", file_name);
+        // printf("File %s not found, no opening database!\n", file_name);
         return;
     }
 
