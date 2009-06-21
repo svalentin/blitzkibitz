@@ -12,35 +12,40 @@ using namespace std;
 #include "acn.h"
 #include "xboard.h"
 
-int terminal_or_xboard()
+void terminal_or_xboard()
 {
     Board board;
     board.InitChessboard();
 
-    Openings Op;
-    Op.InitOpenings("openings.bk");
-    
     int opponent = 0;
     char com[128];
     
-    printf("Alege-ti culoare (0 - alb, 1 - negru)\n"); // '\n' must exist for xboard
+    printf("Choose a color (0 - white, 1 - black)\n"); // '\n' must exist for xboard
     gets(com);
     
     // if we don't recieve a color, then turn to xboard mode!
     if (!sscanf(com, "%d", &opponent)) {
         printf("feature san=1\n");
         printf("feature sigint=0\n");
+        printf("feature sigterm=0\n");
+        printf("feature name=0\n");
         printf("feature time=0\n");
+        printf("feature draw=0\n");
+        printf("feature reuse=0\n");
+        printf("feature analyze=0\n");
         printf("feature myname=\"BlitzKibitz\"\n");
         printf("feature done=1\n");
         XPlay(board);
-        return 0;
+        return;
     }
     
-    printf("Introduceti mutarea in stil ACN:\n");
-    printf("Cu comanda quit se iese\n");
+    printf("Enter the move in ACN format:\n");
+    printf("You can exit the program with \"quit\"\n");
     board.PrintBoard();
     
+    Openings Op;
+    Op.InitOpenings("openings.bk");
+
     int moveNr = 1;
     int startMoves = 0;
     int scor = 0;

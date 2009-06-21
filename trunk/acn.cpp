@@ -1,6 +1,6 @@
 #include "acn.h"
 
-FILE *flog = fopen("sah-ACN.log", "w");
+FILE *flog = fopen("BlitzKibitz-ACN.log", "w");
 
 Move DecodeACN(const char *mutare, Board &board)
 {
