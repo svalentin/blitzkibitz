@@ -31,7 +31,7 @@ void XPlay(Board &board)
     fprintf(logf, "buffers set to 0\n");
     int startMoves = 0;
     int moveNr = 1;
-    
+    printf("Begin\n");
     while (1) {
         Move m;
         

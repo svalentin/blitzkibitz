@@ -1,7 +1,7 @@
 #ifndef OPENDB_H_
 #define OPENDB_H_
 
-#include<ext/hash_map>
+#include<hash_map.h>
 #include<cstring>
 
 using namespace __gnu_cxx;

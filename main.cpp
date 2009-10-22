@@ -8,6 +8,7 @@ using namespace std;
 #include "magic.h"
 #include "pieces.h"
 #include "opendb.h"
+#include "evaluation.h"
 #include "engine.h"
 #include "acn.h"
 #include "xboard.h"
@@ -49,10 +50,12 @@ void terminal_or_xboard()
     int moveNr = 1;
     int startMoves = 0;
     int scor = 0;
-    while (board.sah != MAT) {
+    while (board.sah != MAT)
+	{
         Move m;
         
-        if (board.player == opponent) {
+        if (board.player == opponent)
+		{
             gets(com);
             
             if (strcmp(com, "quit") == 0) break;
@@ -61,29 +64,35 @@ void terminal_or_xboard()
             m.flags = 0;
             m = DecodeACN(com, board);
         }
-        else {
+        else
+		{
             moveNr += 2;
             m = Op.GetMoveFromDB(board);
-            if (m.flags != ERROR) {
+            if (m.flags != ERROR)
+			{
 #ifdef DEBUG
                 printf("Mutarea a fost gasita in baza de date\n");
                 printf("%c%d -> %c%d\n", 'h'-m.source%8, m.source/8+1, 'h'-m.destination%8, m.destination/8+1);
 #endif
             }
-            else {
-                if (board.GetPieceCount() < 11) {
+            else
+			{
+                if (board.GetPieceCount() < 11)
+				{
                     DEPTH_LIMIT = 8;
                     if (board.GetPieceCount() < 7)
                         DEPTH_LIMIT = 9;
                     MAX_DEPTH = 7;
                 }
-                if (startMoves < 4) {
+                if (startMoves < 4)
+				{
                     startMoves++;
                     MAX_DEPTH++;
                     scor = AlphaBeta(board, moveNr);
                     MAX_DEPTH--;
                 }
-                else {
+                else
+				{
                     //vector<Move> moves;
                     //scor = NegaMaxD(moves, moveNr, board, 0);
                     //scor = NegaMax(board, moveNr);
@@ -104,7 +113,8 @@ void terminal_or_xboard()
         if (strcmp(com, "q") == 0) break;
         
 
-        if (!(m.flags & ERROR)) {
+        if (!(m.flags & ERROR))
+		{
             board.MakeMove(m);
             board.player = !board.player;
         }
