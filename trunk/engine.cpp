@@ -319,8 +319,8 @@ inline int SCalculateScore(const Board &cboard)
 // BestMove search Algorithm
 
 Move BestMove;
-int MAX_DEPTH = 6;
-int DEPTH_LIMIT = 7;
+int MAX_DEPTH = 5;
+int DEPTH_LIMIT = 5;
 
 // NOTE: Only use this for debug! It is not up to date (no transposition tables)
 int NegaMax(Board &cboard, int moveNr, int depth)
