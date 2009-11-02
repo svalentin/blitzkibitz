@@ -38,35 +38,35 @@ class Move;
 class Board
 {
     public:
-	ull bb[14];
-    int player;
-	short int enPassant;
-    int sah;
-	unsigned char castling;
+		ull bb[14];
+		int player;
+		short int enPassant;
+		int check;
+		unsigned char castling;
     // bit1 : rocada pe partea regelui pt alb
     // bit2 : rocada pe partea reginei pt alb
     // bit3 : rocada pe partea regelui pt negru
     // bit4 : rocada pe partea reginei pt negru
     
-    void InitChessboard();
-    void PrintBoard(FILE *fout = stdout) const;
-    void PrintBitBoard(const ull bitboard) const;
-    int GetPieceType(const int pos) const;
-    int GetPieceCount() const;
-    int MakeMove(const Move mv);
-    vector<Move> GetMoves() const;
-    ull GetOccupancy() const;
-    int WeGiveCheckOrMate(const Move mv) const;
-    bool VerifyChess(const ull pos, const int side) const;
-    void SaveBoard(Board &brd) const;
-    void LoadBoard(const Board &brd);
+		void InitChessboard();
+		void PrintBoard(FILE *fout = stdout) const;
+		void PrintBitBoard(const ull bitboard) const;
+		int GetPieceType(const int pos) const;
+		int GetPieceCount() const;
+		int MakeMove(const Move mv);
+		vector<Move> GetMoves() const;
+		ull GetOccupancy() const;
+		int WeGiveCheckOrMate(const Move mv) const;
+		bool VerifyChess(const ull pos, const int side) const;
+		void SaveBoard(Board &brd) const;
+		void LoadBoard(const Board &brd);
     
     Board& operator=(const Board &brd);
     
     private:
-    void applyCastling(pair<int, int>, pair<int, int>);
-    bool appendMoves(vector<Move> &m, ull att, const int piece, const int source) const;
-    bool validCastling(const int side) const;
+		void applyCastling(pair<int, int>, pair<int, int>);
+		bool appendMoves(vector<Move> &m, ull att, const int piece, const int source) const;
+		bool validCastling(const int side) const;
 };
 
 

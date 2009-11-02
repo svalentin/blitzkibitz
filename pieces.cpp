@@ -23,7 +23,7 @@ bool Move::FindCoordinates(Board &board)
     if (piece == 'P') {
     
         // move one square
-        if (!(flags & CAPTURA)) {
+        if (!(flags & CAPTURE)) {
             if (player) {
                 SET_BIT(attack, destination+8);
             }
@@ -45,7 +45,7 @@ bool Move::FindCoordinates(Board &board)
         }
 
         // capture
-        if (flags & CAPTURA || flags & ENPASS) {
+        if (flags & CAPTURE || flags & ENPASS) {
             if (player) {
                 if (destination+7 < 64) SET_BIT(attack, destination+7);
                 if (destination+9 < 64) SET_BIT(attack, destination+9);

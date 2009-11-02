@@ -1,34 +1,34 @@
 #ifndef PIECES_H_
 #define PIECES_H_
 
-#define PAWN_W      0
-#define PAWN_B      7
-#define KNIGHT_W    1
-#define KNIGHT_B    8
-#define BISHOP_W    2
-#define BISHOP_B    9
-#define ROOK_W      3
-#define ROOK_B      10
-#define QUEEN_W     4
-#define QUEEN_B     11
-#define KING_W      5
-#define KING_B      12
-#define WHITE_PIECE 6
-#define BLACK_PIECE 13
+#define PAWN_W				0
+#define PAWN_B				7
+#define KNIGHT_W			1
+#define KNIGHT_B			8
+#define BISHOP_W			2
+#define BISHOP_B			9
+#define ROOK_W				3
+#define ROOK_B				10
+#define QUEEN_W				4
+#define QUEEN_B				11
+#define KING_W				5
+#define KING_B				12
+#define WHITE_PIECE			6
+#define BLACK_PIECE			13
 
 
 // Move Flags
-#define ROCADA_MARE 1
-#define ROCADA_MICA 2
-#define ENPASS      4
-#define SAH         8
-#define MAT         16
-#define EGAL        32
-#define CAPTURA     64
-#define PROMOVARE   128
-#define NOTROCMARE  256
-#define NOTROCMICA  512
-#define ERROR       1024
+#define QUEEN_SIDE_CASTLE	1
+#define KING_SIDE_CASTLE	2
+#define ENPASS				4
+#define CHECK				8
+#define MATE				16
+#define DRAW				32
+#define CAPTURE				64
+#define PROMOTION			128
+#define NO_Q_CASTLE			256
+#define NO_K_CASTLE			512
+#define ERROR				1024
 
 
 #include<map>
@@ -49,35 +49,35 @@ class Move
     int destination;    // destination bit index on a 64-bit board
     char piece;         // character to mark the piece type // FIXME: should we make int?
     int flags;
-    int sah;
+    int check;
     char promote_to;    // character to mark the pawn promotion piece
     int player;         // 0 = WHITE  and  1 = BLACK
     bool FindCoordinates(Board &b);
     
     Move()
     {
-        source = destination = piece = flags = sah = promote_to = player = 0;
+        source = destination = piece = flags = check = promote_to = player = 0;
     }
     
     const bool operator<(const Move &b) const
     {
-        if (b.sah == MAT) return false;
-        if (sah == MAT) return true;
+        if (b.check == MATE) return false;
+        if (check == MATE) return true;
 
-        if (b.sah == SAH) return false;
-        if (sah == SAH) return true;
+        if (b.check == CHECK) return false;
+        if (check == CHECK) return true;
 
-        if (flags == CAPTURA && b.flags == CAPTURA) {
+        if (flags == CAPTURE && b.flags == CAPTURE) {
             return PieceMap[piece] < PieceMap[b.piece];
         }
         else {
-            if (flags != CAPTURA && b.flags != CAPTURA) {
+            if (flags != CAPTURE && b.flags != CAPTURE) {
                 if (promote_to == 0 && b.promote_to == 0) {
                     return PieceMap[piece] < PieceMap[b.piece];
                 }
                 else return promote_to > b.promote_to;
             }
-            else return (flags == CAPTURA && b.flags != CAPTURA);
+            else return (flags == CAPTURE && b.flags != CAPTURE);
         }
     }
 };

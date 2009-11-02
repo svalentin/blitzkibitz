@@ -9,7 +9,7 @@
 /// Places pieces at starting location and other initialisation stuff.
 void Board::InitChessboard()
 {
-    player = enPassant = sah = 0;
+    player = enPassant = check = 0;
 
     memset(bb, 0, sizeof(bb));
     bb[0]   |= INITIAL_POS_PAWN_W;
@@ -144,24 +144,24 @@ void Board::applyCastling(pair<int, int> R, pair<int, int> K)
 int Board::MakeMove(const Move mv)
 {    
     // presupunand ca a facut o mutare valida, 
-    // jucatorul curent iese din sah; daca a fost :P
-    if (sah != -1)
-        sah = 0;
+    // jucatorul curent iese din check; daca a fost :P
+    if (check != -1)
+        check = 0;
 
     // chess    
-    if (mv.sah == SAH)
-        sah |= SAH;
+    if (mv.check == CHECK)
+        check |= CHECK;
     
     // fatality
-    if (mv.sah == MAT)
-        sah |= MAT;
+    if (mv.check == MATE)
+        check |= MATE;
  
-    if (mv.flags == ROCADA_MICA) {
+    if (mv.flags == KING_SIDE_CASTLE) {
         applyCastling(make_pair(0,2), make_pair(3,1));
         return 0;
     }
 
-    if (mv.flags == ROCADA_MARE) {
+    if (mv.flags == QUEEN_SIDE_CASTLE) {
         applyCastling(make_pair(7,4), make_pair(3,5));
         return 0;
     }
@@ -353,15 +353,15 @@ int Board::WeGiveCheckOrMate(const Move mv) const
     SaveBoard(brdinf);
     brdinf.MakeMove(mv);
     
-    // daca dam sah
-    if (brdinf.sah != -1 && brdinf.VerifyChess(brdinf.bb[5 + 7*(!brdinf.player)], brdinf.player)) {
-        check = SAH;
+    // daca dam check
+    if (brdinf.check != -1 && brdinf.VerifyChess(brdinf.bb[5 + 7*(!brdinf.player)], brdinf.player)) {
+        check = CHECK;
         // daca dam mat
         brdinf.player = !brdinf.player;
-        brdinf.sah = -1;
+        brdinf.check = -1;
         vector<Move> tstm = brdinf.GetMoves();
         if (!tstm.size())
-            check = MAT;
+            check = MATE;
     }
 
     return check;
@@ -373,21 +373,21 @@ bool Board::appendMoves(vector<Move> &m, ull att, const int piece, const int sou
 {
     Move mv;
     mv.source = source;
-    mv.promote_to = mv.sah = mv.flags = 0;
+    mv.promote_to = mv.check = mv.flags = 0;
     mv.player = player;
     mv.piece = toupper(PieceIndexMap[piece]);
     
     att ^= (bb[6 + 7*player] & att); // do not move a piece over one of the same color
     for (int dest=LSBi(att); dest!=64; dest = LSBi(att)) {
         mv.promote_to = 0;
-        if (mv.sah != -1)
-            mv.sah = 0;
+        if (mv.check != -1)
+            mv.check = 0;
         mv.destination = dest;
 #ifdef DEBUG_MOVES
         printf("[%c|(%c%d)]", mv.piece, 'h' - dest%8, dest/8 + 1);
 #endif
         if (GetPieceType(dest) != -1)
-            mv.flags = CAPTURA;
+            mv.flags = CAPTURE;
         else
             mv.flags = 0;
                 
@@ -398,19 +398,19 @@ bool Board::appendMoves(vector<Move> &m, ull att, const int piece, const int sou
                 mv.promote_to = 'Q';
         }
 
-        // daca dam sah sau mat
-        if (sah != -1)
-            mv.sah = WeGiveCheckOrMate(mv);
+        // daca dam check sau mat
+        if (check != -1)
+            mv.check = WeGiveCheckOrMate(mv);
         
-        // daca ramanem in sah
+        // daca ramanem in check
         Board brdinf;
         SaveBoard(brdinf);
         brdinf.MakeMove(mv);
         
         bool ch = brdinf.VerifyChess(brdinf.bb[5 + 7*brdinf.player], !brdinf.player);
-        if ((brdinf.sah && !ch) || !ch) {
+        if ((brdinf.check && !ch) || !ch) {
             m.push_back(mv);
-            if (sah == -1)
+            if (check == -1)
                 return true;
 #ifdef DEBUG_MOVES
             printf("v  ");
@@ -418,7 +418,7 @@ bool Board::appendMoves(vector<Move> &m, ull att, const int piece, const int sou
         }
 #ifdef DEBUG_MOVES
         if (ch)
-            printf("Ramanem in sah!  ");
+            printf("Ramanem in check!  ");
 #endif
     }
     
@@ -482,15 +482,15 @@ vector<Move> Board::GetMoves() const
     // CASTLING KING SIDE
     if (castling & (1 << (player<<1)) && validCastling(0)) {
         m.player = player;
-        m.flags = ROCADA_MICA;
+        m.flags = KING_SIDE_CASTLE;
         
-        // daca dam sah sau mat
-        m.sah = 0;
-        if (sah != -1)
-            m.sah = WeGiveCheckOrMate(m);
+        // daca dam check sau mat
+        m.check = 0;
+        if (check != -1)
+            m.check = WeGiveCheckOrMate(m);
         
         M.push_back(m);
-        if (sah == -1)
+        if (check == -1)
             return M;
 #ifdef DEBUG_MOVES
         printf("O-O  ");
@@ -500,15 +500,15 @@ vector<Move> Board::GetMoves() const
     // CASTLING QUEEN SIDE
     if (castling & (2 << (player<<1)) && validCastling(1)) {
         m.player = player;
-        m.flags = ROCADA_MARE;
+        m.flags = QUEEN_SIDE_CASTLE;
         
-        // daca dam sah sau mat
-        m.sah = 0;
-        if (sah != -1)
-            m.sah = WeGiveCheckOrMate(m);
+        // daca dam check sau mat
+        m.check = 0;
+        if (check != -1)
+            m.check = WeGiveCheckOrMate(m);
         
         M.push_back(m);
-        if (sah == -1)
+        if (check == -1)
             return M;
 #ifdef DEBUG_MOVES
         printf("O-O-O  ");
@@ -570,7 +570,7 @@ void Board::SaveBoard(Board &brd) const
 {
     brd.player = player;
     brd.castling = castling;
-    brd.sah = sah;
+    brd.check = check;
     brd.enPassant = enPassant;
     for (int i = 0; i < 14; i++)
         brd.bb[i] = bb[i];
@@ -581,7 +581,7 @@ void Board::LoadBoard(const Board &brd)
 {
     player = brd.player;
     castling = brd.castling;
-    sah = brd.sah;
+    check = brd.check;
     enPassant = brd.enPassant;
     for (int i = 0; i < 14; i++)
         bb[i] = brd.bb[i];

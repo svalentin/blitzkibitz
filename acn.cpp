@@ -2,70 +2,70 @@
 
 FILE *flog = fopen("BlitzKibitz-ACN.log", "w");
 
-Move DecodeACN(const char *mutare, Board &board)
+Move DecodeACN(const char *sMove, Board &board)
 {
     setvbuf(flog, 0, _IONBF, 0);
-    fprintf(flog, "\nDecode %s\n", mutare);
+    fprintf(flog, "\nDecode %s\n", sMove);
     
     Move m;
-    m.flags = m.piece = m.promote_to = m.sah = 0;
+    m.flags = m.piece = m.promote_to = m.check = 0;
     m.source = m.destination = 64;
     m.player = board.player;
  
     int i;
     int xi=64, yi=64, xf=64, yf=64;
 
-    i = strlen(mutare)-1;
+    i = strlen(sMove)-1;
 
-    if (mutare[i] == '+') {                 // sah
-        m.sah |= SAH;
+    if (sMove[i] == '+') {                 // check
+        m.check |= CHECK;
         --i;
     }
-    if (mutare[i] == '#') {                 // sah mat
-        m.sah |= MAT;
+    if (sMove[i] == '#') {                 // check mate
+        m.check |= MATE;
         --i;
     }
 
-    if (strcmp(mutare, "O-O-O") == 0) {     // rocada mare
-        m.flags |= ROCADA_MARE;
+    if (strcmp(sMove, "O-O-O") == 0) {     // queen side castle
+        m.flags |= QUEEN_SIDE_CASTLE;
         return m;
     }
-    if (strcmp(mutare, "O-O") == 0) {       // rocada mica
-        m.flags |= ROCADA_MICA;
+    if (strcmp(sMove, "O-O") == 0) {       // king side castle
+        m.flags |= KING_SIDE_CASTLE;
         return m;
     }
 
     // daca mutarea promoveaza
     char promovare = 0;
-    if (IsPiece(mutare[i])) {
-        promovare = mutare[i];
-        m.flags |= PROMOVARE;
+    if (IsPiece(sMove[i])) {
+        promovare = sMove[i];
+        m.flags |= PROMOTION;
         --i;
-        if (mutare[i] == '=') --i;
+        if (sMove[i] == '=') --i;
     }
 
     // locatie destinatie
 
     // linia si coloana
-    if (mutare[i]<'1' || mutare[i]>'8') {
-        fprintf(flog, "Eroare format ACN!(1)\n");
+    if (sMove[i]<'1' || sMove[i]>'8') {
+        fprintf(flog, "ACN format error!(1)\n");
         m.flags = ERROR;
         return m;
     }
     else
-        xf = mutare[i--]-'1';
+        xf = sMove[i--]-'1';
     
-    if (mutare[i]<'a' || mutare[i]>'h') {
-        fprintf(flog, "Eroare format ACN!(2)\n");
+    if (sMove[i]<'a' || sMove[i]>'h') {
+        fprintf(flog, "ACN format error!(2)\n");
         m.flags = ERROR;
         return m;
     }
     else
-        yf = 'h'-mutare[i--];
+        yf = 'h'-sMove[i--];
 
     // Check capture
-    if (mutare[i] == 'x') {
-        m.flags |= CAPTURA;
+    if (sMove[i] == 'x') {
+        m.flags |= CAPTURE;
         --i;
     }
 
@@ -82,26 +82,26 @@ Move DecodeACN(const char *mutare, Board &board)
         m.piece = 'P';    // pion
     }
     else {
-        if (IsPiece(mutare[i])) {
+        if (IsPiece(sMove[i])) {
             // 2. nume de piesa
-            m.piece = mutare[i];
+            m.piece = sMove[i];
         }
         else {
             // 3. linie si/sau coloana
-            if (mutare[i]>='a' && mutare[i]<='h') {
-                yi = 'h'-mutare[i--];
+            if (sMove[i]>='a' && sMove[i]<='h') {
+                yi = 'h'-sMove[i--];
             }
             else {
-                if (mutare[i]>='0' && mutare[i]<='8') {
-                    xi = mutare[i--]-'1';
+                if (sMove[i]>='0' && sMove[i]<='8') {
+                    xi = sMove[i--]-'1';
                     
                     // avem si linie?
-                    if (mutare[i]>='a' && mutare[i]<='h') {
-                        yi = 'h'-mutare[i--];
+                    if (sMove[i]>='a' && sMove[i]<='h') {
+                        yi = 'h'-sMove[i--];
                     }
                 }
                 else {
-                    fprintf(flog, "Eroare format ACN!(3)\n");
+                    fprintf(flog, "ACN format error!(3)\n");
                     m.flags = ERROR;
                     return m;
                 }
@@ -110,11 +110,11 @@ Move DecodeACN(const char *mutare, Board &board)
             // next: nume piesa sau nimic
             if (i<0)
                 m.piece = 'P';
-            else if (IsPiece(mutare[i]))
-                m.piece = mutare[i];
+            else if (IsPiece(sMove[i]))
+                m.piece = sMove[i];
             
             if (m.piece == 0) {
-                fprintf(flog, "Eroare format ACN!(4)\n");
+                fprintf(flog, "ACN format error!(4)\n");
                 m.flags = ERROR;
                 return m;
             }
@@ -127,17 +127,17 @@ Move DecodeACN(const char *mutare, Board &board)
         m.promote_to = promovare;
     
     // check "en passant" flag (pawn piece + capture)
-    if (m.piece == 'P' && m.flags == CAPTURA)
+    if (m.piece == 'P' && m.flags == CAPTURE)
         if (board.GetPieceType(m.destination) == -1)
             m.flags = ENPASS;
     
     if (xi==64 || yi==64) {
         if (!m.FindCoordinates(board)) {
-            fprintf(flog, "Eroare cautare piesa!\n");
-            fprintf(flog, "Am cautat o piesa care ajunge pe pozitia %d %d\n", xf, yf);
-            fprintf(flog, "Ce stiu despre pozitia sursei: %d %d\n", xi, yi);
-            fprintf(flog, "Captura: %d\n", (m.flags & CAPTURA)!=0);
-            fprintf(flog, "Piesa: %c\n", m.piece);
+            fprintf(flog, "Error while searching for piece!\n");
+            fprintf(flog, "Searched for a piece that gets to %d %d\n", xf, yf);
+            fprintf(flog, "What do we know about the starting position: %d %d\n", xi, yi);
+            fprintf(flog, "Capture: %d\n", (m.flags & CAPTURE)!=0);
+            fprintf(flog, "Piece: %c\n", m.piece);
             m.flags = ERROR;
             return m;
         }
@@ -160,21 +160,21 @@ string EncodeACN(Move &mv, Board &board)
     string acn = "";
     acn.reserve(16);    // preallocate 16 bytes to prevent reallocation
 
-    if (mv.flags == ROCADA_MICA) {
+    if (mv.flags == KING_SIDE_CASTLE) {
         acn = "O-O";
-        if (mv.sah == SAH)
+        if (mv.check == CHECK)
             acn += "+";
-        if (mv.sah == MAT)
+        if (mv.check == MATE)
             acn += "#";
         fprintf(flog, "\n%s\n", acn.c_str());
         return acn;
     }
     
-    if (mv.flags == ROCADA_MARE) {
+    if (mv.flags == QUEEN_SIDE_CASTLE) {
         acn = "O-O-O";
-        if (mv.sah == SAH)
+        if (mv.check == CHECK)
             acn += "+";
-        if (mv.sah == MAT)
+        if (mv.check == MATE)
             acn += "#";
         fprintf(flog, "\n%s\n", acn.c_str());
         return acn;
@@ -183,7 +183,7 @@ string EncodeACN(Move &mv, Board &board)
    
     int lin = 64, col = 64;
     Move mt;
-    mt.promote_to = mt.sah = 0; 
+    mt.promote_to = mt.check = 0; 
     
     if (toupper(mv.piece) != 'P')
         acn += mv.piece;
@@ -197,10 +197,10 @@ string EncodeACN(Move &mv, Board &board)
     mt.destination = mv.destination;
     mt.flags = mv.flags;
     mt.player = mv.player;
-    mt.sah = mv.sah;
+    mt.check = mv.check;
     mt.promote_to = mv.promote_to;
     
-    if ((toupper(mv.piece) == 'P' && (mv.flags & ENPASS || mv.flags & CAPTURA)) || !mt.FindCoordinates(board)) {
+    if ((toupper(mv.piece) == 'P' && (mv.flags & ENPASS || mv.flags & CAPTURE)) || !mt.FindCoordinates(board)) {
         // dezamb de coloana
         mt.source = COORDS_TO_INDEX(64, col);
         if (mt.FindCoordinates(board)) {
@@ -222,7 +222,7 @@ string EncodeACN(Move &mv, Board &board)
     }
 
     // capture
-    if (mv.flags & CAPTURA || mv.flags & ENPASS)
+    if (mv.flags & CAPTURE || mv.flags & ENPASS)
         acn += 'x';
     
     // set destination
@@ -238,10 +238,10 @@ string EncodeACN(Move &mv, Board &board)
         acn += mv.promote_to;
     }
     
-    // sah/mat
-    if (mv.sah == SAH)
+    // check/mate
+    if (mv.check == CHECK)
         acn += '+';
-    if (mv.sah == MAT)
+    if (mv.check == MATE)
         acn += '#';
         
     fprintf(flog, "%s\n", acn.c_str());

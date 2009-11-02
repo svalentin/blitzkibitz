@@ -26,7 +26,8 @@ struct op_desc
 };
 
 
-class Openings {
+class Openings
+{
     public:
         ~Openings();
         hash_map<const char*, char*, hash<const char*>, op_eqstr> OpenDB;
