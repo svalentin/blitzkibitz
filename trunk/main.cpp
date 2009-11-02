@@ -13,6 +13,15 @@ using namespace std;
 #include "acn.h"
 #include "xboard.h"
 
+void clrscr(void)
+{
+#ifndef  __linux__
+	system("CLS");
+#else
+	system("clear");
+#endif
+}
+
 void terminal_or_xboard()
 {
     Board board;
@@ -50,7 +59,7 @@ void terminal_or_xboard()
     int moveNr = 1;
     int startMoves = 0;
     int scor = 0;
-    while (board.sah != MAT)
+    while (board.check != MATE)
 	{
         Move m;
         
@@ -63,6 +72,7 @@ void terminal_or_xboard()
             
             m.flags = 0;
             m = DecodeACN(com, board);
+			clrscr();
         }
         else
 		{

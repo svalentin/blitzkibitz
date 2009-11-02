@@ -14,7 +14,7 @@ void Openings::InitOpenings(const char *file_name)
         return;
     }
 
-    op_desc *nou, *p;
+    op_desc *new_op, *p;
     
     DB = new op_desc;
     DB->next = NULL;
@@ -29,23 +29,24 @@ void Openings::InitOpenings(const char *file_name)
     DB->FEN[(int)strlen(DB->FEN) - 1] = 0;
     OpenDB[DB->FEN] = DB->move;
     
-    while (1) {
-        nou = new op_desc;
-        nou->next = NULL;
+    while (1)
+	{
+        new_op = new op_desc;
+        new_op->next = NULL;
 
-        if (!(fgets(nou->FEN, 100, f))) break;
-        if (strstr(nou->FEN, "#END#"))  break;
-        if (!(fgets(nou->move, 50, f))) break;
+        if (!(fgets(new_op->FEN, 100, f))) break;
+        if (strstr(new_op->FEN, "#END#"))  break;
+        if (!(fgets(new_op->move, 50, f))) break;
                 
         i = 0;
-        while (nou->move[i] != '{') i++;
+        while (new_op->move[i] != '{') i++;
         
-        memset(&nou->move[i], 0, (int)strlen(nou->move) - i);
-        nou->FEN[(int)strlen(nou->FEN) - 1] = 0;
-        OpenDB[nou->FEN] = nou->move;
+        memset(&new_op->move[i], 0, (int)strlen(new_op->move) - i);
+        new_op->FEN[(int)strlen(new_op->FEN) - 1] = 0;
+        OpenDB[new_op->FEN] = new_op->move;
         
-        p->next = nou;
-        p = nou;
+        p->next = new_op;
+        p = new_op;
     }
 
     fclose(f);
@@ -58,7 +59,7 @@ Move Openings::GetMoveFromDB(Board &board)
 {
     Move mv;
  
-    mv.flags = mv.piece = mv.promote_to = mv.sah = 0;
+    mv.flags = mv.piece = mv.promote_to = mv.check = 0;
     mv.source = mv.destination = 64;
     mv.player = board.player;
     
@@ -80,7 +81,7 @@ Move Openings::GetMoveFromDB(Board &board)
     
     // promovare
     if (mvch[5] != 0) {
-        mv.flags |= PROMOVARE;
+        mv.flags |= PROMOTION;
         switch (mvch[5]) {
             case 'q': mv.promote_to = 'Q'; break;
             case 'r': mv.promote_to = 'R'; break;
@@ -95,24 +96,24 @@ Move Openings::GetMoveFromDB(Board &board)
     mv.piece = PieceIndexMap[piecetype];
     
     if (piecetype == 5 && mv.source == 59 && mv.destination == 57) {
-        mv.flags |= ROCADA_MICA;
+        mv.flags |= KING_SIDE_CASTLE;
     }
     else if (piecetype == 5 && mv.source == 3 && mv.destination == 1) {
-        mv.flags |= ROCADA_MICA;
+        mv.flags |= KING_SIDE_CASTLE;
     }
     else if (piecetype == 5 && mv.source == 59 && mv.destination == 61) {
-        mv.flags |= ROCADA_MARE;
+        mv.flags |= QUEEN_SIDE_CASTLE;
     }
     else if (piecetype == 5 && mv.source == 3 && mv.destination == 5) {
-        mv.flags |= ROCADA_MARE;
+        mv.flags |= QUEEN_SIDE_CASTLE;
     }
     
     piecetype = board.GetPieceType(mv.destination);
     if (piecetype != -1)
-        mv.flags |= CAPTURA;
+        mv.flags |= CAPTURE;
 
-    // daca dam sah sau mat
-    mv.sah = board.WeGiveCheckOrMate(mv);
+    // daca dam check sau mat
+    mv.check = board.WeGiveCheckOrMate(mv);
     
     return mv;
 }

@@ -8,6 +8,7 @@
 #include "magic.h"
 #include "pieces.h"
 
-Move DecodeACN(const char *mutare, Board &board);
+Move DecodeACN(const char *sMove, Board &board);
 string EncodeACN(Move &mv, Board &board);
+
 #endif

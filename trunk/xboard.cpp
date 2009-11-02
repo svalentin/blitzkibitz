@@ -43,7 +43,7 @@ void XPlay(Board &board)
             m.flags = 0;
             m = DecodeACN(cbuffer, board);
 //            fprintf(logf, "DecodeACN finished with m.flags=%d\n", m.flags);
-            if (m.sah == MAT) {
+            if (m.check == MATE) {
                 printf("resign\n");
             }
             else if (m.flags & ERROR) {
@@ -124,7 +124,7 @@ void XPlay(Board &board)
                 fprintf(logf, "Move #%d found in DB!\n", moveNr);
             }
             
-            if (m.flags & EGAL) {
+            if (m.flags & DRAW) {
                 // I can't make any move
                 printf("1/2-1/2 {Stalemate}");
                 fprintf(logf, "Stalemate\n");
@@ -135,7 +135,7 @@ void XPlay(Board &board)
                 fprintf(logf, "%s\n", enc.c_str());
                 printf("move %s\n", enc.c_str());
                 
-                if (m.sah == MAT) {
+                if (m.check == MATE) {
                     printf("checkmate");
                     board.MakeMove(m);
                     board.player = !board.player;
@@ -144,7 +144,7 @@ void XPlay(Board &board)
             }
         }
         
-        if (!((m.flags & ERROR) || m.sah == MAT || (m.flags & EGAL))) {
+        if (!((m.flags & ERROR) || m.check == MATE || (m.flags & DRAW))) {
             board.MakeMove(m);
             board.player = !board.player;
             board.PrintBoard(logf);
