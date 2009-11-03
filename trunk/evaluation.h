@@ -1,7 +1,12 @@
-#ifndef _EVALUATION_H_#define _EVALUATION_H_#include "pieces.h"
+#ifndef _EVALUATION_H_
+#define _EVALUATION_H_
+
+#include "pieces.h"
 #include "magic.h"
 #include "hash.h"
-///////////////////////////////////////////////////////////////
+
+
+///////////////////////////////////////////////////////////////
 // Scoring magic
 
 #define PAWN_SCORE      100
@@ -110,4 +115,12 @@ const int PiecePositionScore[7][64] =
         -10,  0,  0,  0,  0,  0,  0,-10,
         -40,-10, -5, -5, -5, -5,-10,-40
     }
-};inline void evalPieces(const Board &cboard, int &wscore, int &bscore);inline void evalPawn(const Board &cboard, const int gameStage, int &wscore, int &bscore);inline void evalKing(const Board &cboard, const bool gameStage, int &wscore, int &bscore);int CalculateScore(const Board &cboard);int SCalculateScore(const Board &cboard);#endif
+};
+
+inline void evalPieces(const Board &cboard, int &wscore, int &bscore);
+inline void evalPawn(const Board &cboard, const int gameStage, int &wscore, int &bscore);
+inline void evalKing(const Board &cboard, const bool gameStage, int &wscore, int &bscore);
+int CalculateScore(const Board &cboard);
+int SCalculateScore(const Board &cboard);
+
+#endif

@@ -73,9 +73,9 @@ class Board
 
 
 ///////////////////////////////////////////////////////////////
-// functii si defineuri pentru lucru pe biti
-// functii pentru a afla Least Semnificative Bit si Most Semnificative Bit
-// LSBb intoarce un ull doar cu bitul cel mai nesemnificativ setat
+// bitwise macros and procedures
+// procedures for Least Semnificative Bit & Most Semnificative Bit
+// LSBb returns a uul with only the LSB set
 
 #define CLEAR_BIT_UCHAR(x, index) ((x) &= ~((unsigned char) 1 << ((unsigned char) index)))
 
