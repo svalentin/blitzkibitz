@@ -2,6 +2,20 @@
 #include "pieces.h"
 #include "magic.h"
 
+// Lookuptable for LSB function
+int LookupBit[64] = 
+{
+
+	63, 0, 58, 1, 59, 47, 53, 2,
+	60, 39, 48, 27, 54, 33, 42, 3,
+	61, 51, 37, 40, 49, 18, 28, 20,
+	55, 30, 34, 11, 43, 14, 22, 4,
+	62, 57, 46, 52, 38, 26, 32, 41,
+	50, 36, 17, 19, 29, 10, 13, 21,
+	56, 45, 25, 31, 35, 16, 9, 12,
+	44, 24, 15, 8, 23, 7, 6, 5
+};
+
 ///////////////////////////////////////////////////////////////
 // Board class
 
@@ -606,34 +620,43 @@ Board& Board::operator=(const Board &brd)
 /// Returns 64 in case of failure!
 int LSB(const ull b)
 {
-    int ra, rb, rc;
-#ifdef _MSC_VER
-    __asm {
-        xor eax, eax
-        bsf eax, dword ptr b
-        jnz end
-        bsf eax, dword ptr b+4
-        jz fail
-        add eax, 32d
-        jmp end
-        fail: mov eax,64
-        end:
-    }
+#ifdef USE_ASM
+		int ra, rb, rc;
+	#ifdef _MSC_VER
+		__asm
+		{
+			xor eax, eax
+			bsf eax, dword ptr b
+			jnz end
+			bsf eax, dword ptr b+4
+			jz fail
+			add eax, 32d
+			jmp end
+			fail: mov eax,64
+			end:
+		}
+	#else
+		asm(
+			"   bsf     %2, %0"     "\n\t" 
+			"   jnz     2f"         "\n\t" 
+			"   bsf     %1, %0"     "\n\t" 
+			"   jnz     1f"         "\n\t" 
+			"   movl    $64, %0"    "\n\t" 
+			"   jmp     2f"         "\n\t" 
+			"1: addl    $32,%0"     "\n\t" 
+			"2:"
+			:   "=&q"(ra), "=&q"(rb), "=&q"(rc)
+			:   "1"((int) (b >> 32)), "2"((int) b)
+			:   "cc"
+		);
+		return ra;
+	#endif
 #else
-    asm(
-        "   bsf     %2, %0"     "\n\t" 
-        "   jnz     2f"         "\n\t" 
-        "   bsf     %1, %0"     "\n\t" 
-        "   jnz     1f"         "\n\t" 
-        "   movl    $64, %0"    "\n\t" 
-        "   jmp     2f"         "\n\t" 
-        "1: addl    $32,%0"     "\n\t" 
-        "2:"
-        :   "=&q"(ra), "=&q"(rb), "=&q"(rc)
-        :   "1"((int) (b >> 32)), "2"((int) b)
-        :   "cc"
-    );
-    return ra;
+	if(b)
+	{
+		return LookupBit[((b&(-b)) * 0x7EDD5E59A4E28C2ULL) >> 58];
+	}
+	return 64;
 #endif
 }
 

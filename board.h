@@ -6,6 +6,8 @@
 #include<cstring>
 #include<cctype>
 
+#define USE_ASM
+
 typedef unsigned long long ull;
 
 #define INITIAL_POS_PAWN_W 0x000000000000FF00LL
