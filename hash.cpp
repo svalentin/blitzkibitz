@@ -61,7 +61,7 @@ ull GetZobristKey(const Board &board)
     // who moves
     if (board.player) key ^= zobristPlayer;
     
-	return key;
+    return key;
 }
 
 ull GetPawnZobristKey(const Board &board)

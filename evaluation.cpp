@@ -91,16 +91,16 @@ inline void evalKing(const Board &cboard, const bool gameStage, int &wscore, int
 int CalculateScore(const Board &cboard)
 {
     int wscore=0, bscore=0;
-	int gameStage=0;
+    int gameStage=0;
     
-	evalPieces(cboard, wscore, bscore);
+    evalPieces(cboard, wscore, bscore);
 
     if (wscore < KING_SCORE+2000 || bscore < KING_SCORE+2000) gameStage = 1;
     if (wscore < KING_SCORE+1500 || bscore < KING_SCORE+1500) gameStage = 2;
     if (wscore < KING_SCORE+1000 || bscore < KING_SCORE+1000) gameStage = 3;
-	
+    
     evalPawn(cboard, gameStage, wscore, bscore);
-	evalKing(cboard, gameStage, wscore, bscore);
+    evalKing(cboard, gameStage, wscore, bscore);
     
     //////
     // Position score
@@ -133,7 +133,7 @@ int CalculateScore(const Board &cboard)
             }
             else if (i == KING_W) {
                 attack |= Kmagic(pos);
-				continue;
+                continue;
             }
             
             // piece position
@@ -171,7 +171,7 @@ int CalculateScore(const Board &cboard)
             }
             else if (i == KING_B) {
                 attack |= Kmagic(pos);
-				continue;
+                continue;
             }
             
             // piece position

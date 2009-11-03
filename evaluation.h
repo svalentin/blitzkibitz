@@ -33,10 +33,10 @@ const int IsolatedPawnPenalty[8] = {10, 12, 14, 18, 18, 14, 12, 10};
     
 const int PiecePositionScore[7][64] =
 {
-	// Pawn scores White
-	{
-		 0,  0,  0,  0,  0,  0,  0,  0,
-		20, 26, 26, 28, 28, 26, 26, 20,
+    // Pawn scores White
+    {
+         0,  0,  0,  0,  0,  0,  0,  0,
+        20, 26, 26, 28, 28, 26, 26, 20,
         12, 14, 16, 21, 21, 16, 14, 12,
          8, 10, 12, 18, 18, 12, 10,  8,
          4,  6,  8, 16, 16,  8,  6,  4,
@@ -99,7 +99,7 @@ const int PiecePositionScore[7][64] =
         24, 20, 16, 12, 12, 16, 20, 24,
         24, 24, 24, 16, 16,  6, 32, 32
     },
-	// King end-game scores White
+    // King end-game scores White
     {
         -30, -5,  0,  0,  0,  0, -5,-30,
          -5,  0,  0,  0,  0,  0,  0, -5,
