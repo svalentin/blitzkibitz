@@ -29,8 +29,7 @@ void Openings::InitOpenings(const char *file_name)
     DB->FEN[(int)strlen(DB->FEN) - 1] = 0;
     OpenDB[DB->FEN] = DB->move;
     
-    while (1)
-	{
+    while (1) {
         new_op = new op_desc;
         new_op->next = NULL;
 
@@ -127,8 +126,7 @@ char *toFEN(Board &board)
     
     for (int i=7, t=0; i >= 0; i--) {
         int g = 0;
-        for (int j = 7; j >= 0; j--)
-        {
+        for (int j = 7; j >= 0; j--) {
             int p_type = board.GetPieceType(i * 8 + j);
             
             if (p_type != -1 && g) {

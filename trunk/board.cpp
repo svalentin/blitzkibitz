@@ -607,35 +607,34 @@ Board& Board::operator=(const Board &brd)
 int LSB(const ull b)
 {
     int ra, rb, rc;
-	#ifdef _MSC_VER
-		__asm 
-		{
-			xor eax, eax
-			bsf eax, dword ptr b
-			jnz end
-			bsf eax, dword ptr b+4
-			jz fail
-			add eax, 32d
-			jmp end
-			fail: mov eax,64
-			end:
-		}
-	#else
-		asm(
-			"   bsf     %2, %0"     "\n\t" 
-			"   jnz     2f"         "\n\t" 
-			"   bsf     %1, %0"     "\n\t" 
-			"   jnz     1f"         "\n\t" 
-			"   movl    $64, %0"    "\n\t" 
-			"   jmp     2f"         "\n\t" 
-			"1: addl    $32,%0"     "\n\t" 
-			"2:"
-			:   "=&q"(ra), "=&q"(rb), "=&q"(rc)
-			:   "1"((int) (b >> 32)), "2"((int) b)
-			:   "cc"
-			);
-		return ra;
-	#endif
+#ifdef _MSC_VER
+    __asm {
+        xor eax, eax
+        bsf eax, dword ptr b
+        jnz end
+        bsf eax, dword ptr b+4
+        jz fail
+        add eax, 32d
+        jmp end
+        fail: mov eax,64
+        end:
+    }
+#else
+    asm(
+        "   bsf     %2, %0"     "\n\t" 
+        "   jnz     2f"         "\n\t" 
+        "   bsf     %1, %0"     "\n\t" 
+        "   jnz     1f"         "\n\t" 
+        "   movl    $64, %0"    "\n\t" 
+        "   jmp     2f"         "\n\t" 
+        "1: addl    $32,%0"     "\n\t" 
+        "2:"
+        :   "=&q"(ra), "=&q"(rb), "=&q"(rc)
+        :   "1"((int) (b >> 32)), "2"((int) b)
+        :   "cc"
+    );
+    return ra;
+#endif
 }
 
 /// Returns the index of the Most Semnificative Bit.
@@ -643,33 +642,32 @@ int LSB(const ull b)
 int MSB(const ull b)
 {
     int ra, rb, rc;
-	#ifdef _MSC_VER
-		__asm 
-		{
-			xor eax, eax
-			bsr eax, dword ptr b
-			jnz end
-			bsr eax, dword ptr b+4
-			jz fail
-			add eax, 32d
-			jmp end
-			fail: mov eax,64
-			end:
-		}
-	#else
-		asm(
-			"   bsr     %1, %0"     "\n\t"
-			"   jnz     1f"         "\n\t" 
-			"   bsr     %2, %0"     "\n\t" 
-			"   jnz     2f"         "\n\t" 
-			"   movl    $64, %0"    "\n\t" 
-			"   jmp     2f"         "\n\t" 
-			"1: addl    $32,%0"     "\n\t" 
-			"2:"
-			:   "=&q"(ra), "=&q"(rb), "=&q"(rc)
-			:   "1"((int) (b >> 32)), "2"((int) b)
-			:   "cc"
-			);
-		return ra;
-	#endif
+#ifdef _MSC_VER
+    __asm {
+        xor eax, eax
+        bsr eax, dword ptr b
+        jnz end
+        bsr eax, dword ptr b+4
+        jz fail
+        add eax, 32d
+        jmp end
+        fail: mov eax,64
+        end:
+    }
+#else
+    asm(
+        "   bsr     %1, %0"     "\n\t"
+        "   jnz     1f"         "\n\t" 
+        "   bsr     %2, %0"     "\n\t" 
+        "   jnz     2f"         "\n\t" 
+        "   movl    $64, %0"    "\n\t" 
+        "   jmp     2f"         "\n\t" 
+        "1: addl    $32,%0"     "\n\t" 
+        "2:"
+        :   "=&q"(ra), "=&q"(rb), "=&q"(rc)
+        :   "1"((int) (b >> 32)), "2"((int) b)
+        :   "cc"
+    );
+    return ra;
+#endif
 }
