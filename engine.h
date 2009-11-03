@@ -4,11 +4,6 @@
 #include <time.h>
 #include <stdlib.h>
 
-#include "pieces.h"
-#include "board.h"
-#include "magic.h"
-#include "hash.h"
-
 #define INF 0x3f3f3f3f
 
 typedef unsigned long long ull;

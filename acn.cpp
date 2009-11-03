@@ -1,3 +1,7 @@
+#include "board.h"
+#include "magic.h"
+#include "pieces.h"
+
 #include "acn.h"
 
 FILE *flog = fopen("BlitzKibitz-ACN.log", "w");
@@ -35,7 +39,7 @@ Move DecodeACN(const char *sMove, Board &board)
         return m;
     }
 
-    // daca mutarea promoveaza
+    // if this moves leads to a promotion
     char promovare = 0;
     if (IsPiece(sMove[i])) {
         promovare = sMove[i];
@@ -44,9 +48,9 @@ Move DecodeACN(const char *sMove, Board &board)
         if (sMove[i] == '=') --i;
     }
 
-    // locatie destinatie
+    // destination place
 
-    // linia si coloana
+    // line and column
     if (sMove[i]<'1' || sMove[i]>'8') {
         fprintf(flog, "ACN format error!(1)\n");
         m.flags = ERROR;
@@ -70,24 +74,24 @@ Move DecodeACN(const char *sMove, Board &board)
     }
 
     // next:
-    // 1. nimic => pion
-    // 2. nume piesa
-    // 3. linie sau coloana => indica poz initiala
+    // 1. nothing => pawn
+    // 2. piece type
+    // 3. line or column => indicates initial position
     
     // NOTICE: needs more testing in all possible combinations!
     //         try to vary piece type, line, column and capture
     
     if (i<0) {
-        // 1. nimic => pion
+        // 1. nothing => pawn
         m.piece = 'P';    // pion
     }
     else {
         if (IsPiece(sMove[i])) {
-            // 2. nume de piesa
+            // 2. piece type
             m.piece = sMove[i];
         }
         else {
-            // 3. linie si/sau coloana
+            // 3. line and/or column
             if (sMove[i]>='a' && sMove[i]<='h') {
                 yi = 'h'-sMove[i--];
             }
@@ -107,7 +111,7 @@ Move DecodeACN(const char *sMove, Board &board)
                 }
             }
             
-            // next: nume piesa sau nimic
+            // next: piece type or nothing
             if (i<0)
                 m.piece = 'P';
             else if (IsPiece(sMove[i]))
@@ -201,19 +205,19 @@ string EncodeACN(Move &mv, Board &board)
     mt.promote_to = mv.promote_to;
     
     if ((toupper(mv.piece) == 'P' && (mv.flags & ENPASS || mv.flags & CAPTURE)) || !mt.FindCoordinates(board)) {
-        // dezamb de coloana
+        // column desabiguazation
         mt.source = COORDS_TO_INDEX(64, col);
         if (mt.FindCoordinates(board)) {
             acn += ('h' - col);
         }
         else {
-            // dezamb de coloana
+            // line desabiguazation
             mt.source = COORDS_TO_INDEX(lin, 64);
             if (mt.FindCoordinates(board)) {
                 acn += (char)('1'+lin);
             }
             else {
-                // dezamb de linie + coloana
+                // line & column desabiguazation
                 mt.source = COORDS_TO_INDEX(lin, col);
                 acn += (char)('h' - col);
                 acn += (char)('1' + lin);

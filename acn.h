@@ -4,10 +4,6 @@
 #include <cstdio>
 #include <string>
 
-#include "board.h"
-#include "magic.h"
-#include "pieces.h"
-
 Move DecodeACN(const char *sMove, Board &board);
 string EncodeACN(Move &mv, Board &board);
 

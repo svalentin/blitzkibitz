@@ -1,4 +1,6 @@
-#include "evaluation.h"inline void evalPieces(const Board &cboard, int &wscore, int &bscore)
+#include "evaluation.h"
+
+inline void evalPieces(const Board &cboard, int &wscore, int &bscore)
 {
     // white score
     for (int i=0; i<6; ++i) {
