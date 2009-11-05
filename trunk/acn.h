@@ -1,6 +1,10 @@
 #ifndef ACN_H_
 #define ACN_H_
 
+#include "board.h"
+#include "magic.h"
+#include "pieces.h"
+
 #include <cstdio>
 #include <string>
 

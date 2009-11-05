@@ -1,8 +1,11 @@
 #ifndef ENGINE_H_
 #define ENGINE_H_
 
-#include <time.h>
-#include <stdlib.h>
+#include "board.h"
+#include "evaluation.h"
+
+#include <ctime>
+#include <cstdlib>
 
 #define INF 0x3f3f3f3f
 
