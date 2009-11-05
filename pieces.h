@@ -1,6 +1,9 @@
 #ifndef PIECES_H_
 #define PIECES_H_
 
+#include "board.h"
+#include "magic.h"
+
 #define PAWN_W				0
 #define PAWN_B				7
 #define KNIGHT_W			1
@@ -44,42 +47,42 @@ extern map<int, char> PieceIndexMap;
 
 class Move
 {
-    public:
-    int source;         // source bit index on a 64-bit board
-    int destination;    // destination bit index on a 64-bit board
-    char piece;         // character to mark the piece type // FIXME: should we make int?
-    int flags;
-    int check;
-    char promote_to;    // character to mark the pawn promotion piece
-    int player;         // 0 = WHITE  and  1 = BLACK
-    bool FindCoordinates(Board &b);
-    
-    Move()
-    {
-        source = destination = piece = flags = check = promote_to = player = 0;
-    }
-    
-    const bool operator<(const Move &b) const
-    {
-        if (b.check == MATE) return false;
-        if (check == MATE) return true;
+	public:
+	int source;			// source bit index on a 64-bit board
+	int destination;	// destination bit index on a 64-bit board
+	char piece;			// character to mark the piece type // FIXME: should we make int?
+	int flags;
+	int check;
+	char promote_to;	// character to mark the pawn promotion piece
+	int player;			// 0 = WHITE  and  1 = BLACK
+	bool FindCoordinates(Board &b);
+	
+	Move()
+	{
+		source = destination = piece = flags = check = promote_to = player = 0;
+	}
+	
+	const bool operator<(const Move &b) const
+	{
+		if (b.check == MATE) return false;
+		if (check == MATE) return true;
 
-        if (b.check == CHECK) return false;
-        if (check == CHECK) return true;
+		if (b.check == CHECK) return false;
+		if (check == CHECK) return true;
 
-        if (flags == CAPTURE && b.flags == CAPTURE) {
-            return PieceMap[piece] < PieceMap[b.piece];
-        }
-        else {
-            if (flags != CAPTURE && b.flags != CAPTURE) {
-                if (promote_to == 0 && b.promote_to == 0) {
-                    return PieceMap[piece] < PieceMap[b.piece];
-                }
-                else return promote_to > b.promote_to;
-            }
-            else return (flags == CAPTURE && b.flags != CAPTURE);
-        }
-    }
+		if (flags == CAPTURE && b.flags == CAPTURE) {
+			return PieceMap[piece] < PieceMap[b.piece];
+		}
+		else {
+			if (flags != CAPTURE && b.flags != CAPTURE) {
+				if (promote_to == 0 && b.promote_to == 0) {
+					return PieceMap[piece] < PieceMap[b.piece];
+				}
+				else return promote_to > b.promote_to;
+			}
+			else return (flags == CAPTURE && b.flags != CAPTURE);
+		}
+	}
 };
 
 /// Checks if a character is a valid notation for a piece
