@@ -20,7 +20,9 @@ int CalculateScore(const Board &cboard);
 
 int NegaMax(Board &cboard, int moveNr, int depth=0);
 int NegaMaxD(vector<Move> &moves, int moveNr, Board &cboard, int depth);
-int AlphaBeta(const Board &cboard, const int moveNr, const int depth=0, int alpha=-INF, int beta=INF);
+int AlphaBeta(const Board &cboard, const int moveNr, const int max_depth, const int depth=0, int alpha=-INF, int beta=INF);
 int AlphaBetaD(vector<Move> &moves, Board &cboard, int moveNr, int depth=0, int alpha=-INF, int beta=INF);
+
+int IDDFS(const Board &cboard, const int moveNr, const int max_depth);
 
 #endif
