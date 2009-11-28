@@ -14,7 +14,7 @@
 #include <algorithm>
 using namespace std;
 
-#define USE_ASM
+//#define USE_ASM
 
 typedef unsigned long long ull;
 
@@ -64,7 +64,7 @@ class Board
 	vector<Move> GetMoves() const;
 	ull GetOccupancy() const;
 	int WeGiveCheckOrMate(const Move mv) const;
-	bool VerifyChess(const ull pos, const int side) const;
+	const bool VerifyChess(const ull pos, const int side) const;
 	void SaveBoard(Board &brd) const;
 	void LoadBoard(const Board &brd);
 	
@@ -73,8 +73,8 @@ class Board
 	private:
 	
 	void applyCastling(pair<int, int>, pair<int, int>);
-	bool appendMoves(vector<Move> &m, ull att, const int piece, const int source) const;
-	bool validCastling(const int side) const;
+	const bool appendMoves(vector<Move> &m, ull att, const int piece, const int source) const;
+	const bool validCastling(const int side) const;
 };
 
 

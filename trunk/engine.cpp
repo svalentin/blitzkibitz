@@ -90,9 +90,9 @@ inline void recordHash(ull zkey, ull pzkey, bool exact, bool lbound, int score,
 
 int hits = 0, hd2 = 0, hd3 = 0;
 // The main function used to search for the best move
-int AlphaBeta(const Board &cboard, const int moveNr, const int depth, int alpha, int beta)
+int AlphaBeta(const Board &cboard, const int moveNr, const int max_depth, const int depth, int alpha, int beta)
 {
-	if (depth == MAX_DEPTH) {
+	if (depth == max_depth) {
 		return SCalculateScore(cboard);
 	}
 
@@ -156,7 +156,7 @@ int AlphaBeta(const Board &cboard, const int moveNr, const int depth, int alpha,
 		newboard.MakeMove(mvs[i]);
 		newboard.player = !newboard.player;
 
-		int score = -AlphaBeta(newboard, moveNr+1, depth+1, -beta, -alpha);
+		int score = -AlphaBeta(newboard, moveNr+1, max_depth, depth+1, -beta, -alpha);
 		
 		if (score >= beta) {
 			recordHash(zkey, pzkey, false, false, beta, MAX_DEPTH-depth, cboard.GetPieceCount());
@@ -174,16 +174,23 @@ int AlphaBeta(const Board &cboard, const int moveNr, const int depth, int alpha,
 	int extra_depth=0;
 	if (depth==0 && MAX_DEPTH < DEPTH_LIMIT && (double)(clock() - tstart) / CLOCKS_PER_SEC < 2) {
 		extra_depth = 1;
-		MAX_DEPTH += extra_depth;
-		alpha = AlphaBeta(cboard, moveNr);
+		alpha = AlphaBeta(cboard, moveNr, max_depth+extra_depth);
 	}
 	
 	// store the key
 	recordHash(zkey, pzkey, hexact, true, alpha, MAX_DEPTH-depth, cboard.GetPieceCount());
 	
-	MAX_DEPTH -= extra_depth;
-	
 	return alpha;
+}
+
+int IDDFS(const Board &cboard, const int moveNr, const int max_depth)
+{
+	int i,score;
+	do {
+		score=AlphaBeta(cboard, moveNr,i);
+		i++;
+	}while(cboard.check != MATE && i<max_depth);
+	return score;
 }
 
 // NOTE:

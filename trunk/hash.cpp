@@ -76,7 +76,7 @@ ull GetPawnZobristKey(const Board &board)
 	return key;
 }
 
-HElem SetHElem(const int index, const HElem elem)
+void SetHElem(const int index, const HElem elem)
 {
 	// Replace key if table position is empty OR
 	// if number of pieces in stored table is greater or equal to new elem OR

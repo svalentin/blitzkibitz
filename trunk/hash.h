@@ -63,6 +63,6 @@ inline HElem GetHElem(const int index)
 	return HTable[index];
 }
 
-HElem SetHElem(const int index, const HElem elem);
+void SetHElem(const int index, const HElem elem);
 
 #endif

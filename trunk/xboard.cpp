@@ -99,11 +99,11 @@ void XPlay(Board &board)
 				if (startMoves < 4) {
 					startMoves++;
 					MAX_DEPTH++;
-					score = AlphaBeta(board, moveNr);
+					score = IDDFS(board, moveNr, MAX_DEPTH);
 					MAX_DEPTH--;
 				}
 				else {
-					score = AlphaBeta(board, moveNr);
+					score = IDDFS(board, moveNr, MAX_DEPTH);
 				}
 				m = BestMove;
 				fprintf(logf, "Move #%d\n", moveNr);

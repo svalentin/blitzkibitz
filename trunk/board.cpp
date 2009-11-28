@@ -259,7 +259,7 @@ ull Board::GetOccupancy() const
 }
 
 /// Verifies if given squares are controled by the enemy
-bool Board::VerifyChess(const ull pos, const int side) const
+const bool Board::VerifyChess(const ull pos, const int side) const
 {
 	ull bb_cpy;
 	int piece;
@@ -327,7 +327,7 @@ bool Board::VerifyChess(const ull pos, const int side) const
 }
 
 /// Validates castlings
-bool Board::validCastling(const int side) const
+const bool Board::validCastling(const int side) const
 {
 	ull chess_field, occ_field, pawns_att;
 	
@@ -379,7 +379,7 @@ int Board::WeGiveCheckOrMate(const Move mv) const
 
 /// Given a piece, its source and valid locations as a bitboard
 /// append the moves in Move-class format to a vector of possible moves.
-bool Board::appendMoves(vector<Move> &m, ull att, const int piece, const int source) const
+const bool Board::appendMoves(vector<Move> &m, ull att, const int piece, const int source) const
 {
 	Move mv;
 	mv.source = source;
