@@ -15,7 +15,7 @@ using namespace std;
 
 void clrscr(void)
 {
-#ifndef  __linux__
+#ifndef __linux__
 	system("CLS");
 #else
 	system("clear");
@@ -58,7 +58,7 @@ void terminal_or_xboard()
 
 	int moveNr = 1;
 	int startMoves = 0;
-	int scor = 0;
+	int score = 0;
 	while (board.check != MATE) {
 		Move m;
 		
@@ -92,20 +92,22 @@ void terminal_or_xboard()
 				if (startMoves < 4) {
 					startMoves++;
 					MAX_DEPTH++;
-					scor = AlphaBeta(board, moveNr, MAX_DEPTH);
+					//score = AlphaBeta(board, moveNr, MAX_DEPTH);
+					score = IDDFS(board, moveNr, MAX_DEPTH);
 					MAX_DEPTH--;
 				}
 				else {
 					//vector<Move> moves;
-					//scor = NegaMaxD(moves, moveNr, board, 0);
-					//scor = NegaMax(board, moveNr);
-					scor = AlphaBeta(board, moveNr, MAX_DEPTH);
-					//scor = AlphaBetaD(moves, moveNr, board);
+					//score = NegaMaxD(moves, moveNr, board, 0);
+					//score = NegaMax(board, moveNr);
+					//score = AlphaBeta(board, moveNr, MAX_DEPTH);
+					score = IDDFS(board, moveNr, MAX_DEPTH);
+					//score = AlphaBetaD(moves, moveNr, board);
 				}
-				printf("BestMove has score %d - calc in %f\n", scor,(double)(clock() - tstart) / CLOCKS_PER_SEC);
+				printf("BestMove has score %d - calc in %f\n", score,(double)(clock() - tstart) / CLOCKS_PER_SEC);
 				m = BestMove;
 				//for (int i=0; i<moves.size(); ++i)
-				//    printf("%c%d -> %c%d\n", 'h'-moves[i].source%8, moves[i].source/8+1, 'h'-moves[i].destination%8, moves[i].destination/8+1);
+				//	printf("%c%d -> %c%d\n", 'h'-moves[i].source%8, moves[i].source/8+1, 'h'-moves[i].destination%8, moves[i].destination/8+1);
 			}
 
 			string enc = EncodeACN(m, board);

@@ -16,8 +16,8 @@ class HElem
 	public:
 	ull zkey;				// zobrist key
 	ull pzkey;				// pawn zobrist key
-	bool exact;				// true = exact value   |   false = check lbound
-	bool lbound;			// true = lowerbound	|   false = upperbound
+	bool exact;				// true = exact value	|	false = check lbound
+	bool lbound;			// true = lowerbound	|	false = upperbound
 	int score;				// evaluated score
 	unsigned char depth;	// depth calculated from this point
 	unsigned char npiece;	// number of pieces left on the board

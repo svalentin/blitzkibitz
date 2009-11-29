@@ -1,13 +1,12 @@
 # BlitzKibitz
 # makefile
 
-MODEL = s
 CC = g++
 CFLAGS = -s -O3 -ffast-math -fomit-frame-pointer -msse -mfpmath=sse
 # CFLAGS explanation
-# 	-s
+#	-s
 #		Option removes all symbol table and relocation information from the executable
-# 	-fomit-fame-pointer
+#	-fomit-fame-pointer
 #		Makes programs faster at runtime, but makes debugging impossible.
 #		x86 processors need the frame pointer for debugging.
 #	-mfpmath=sse
