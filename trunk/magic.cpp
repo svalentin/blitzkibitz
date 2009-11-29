@@ -9,8 +9,8 @@ const ull cbb[8] = {
 	0x1010101010101010ULL, 0x2020202020202020ULL, 0x4040404040404040ULL, 0x8080808080808080ULL
 };
 
-ull magicmoveskdb[64];		 	// King moves database
-ull magicmovesndb[64];		 	// kNight moves database
+ull magicmoveskdb[64];			// King moves database
+ull magicmovesndb[64];			// kNight moves database
 ull magicmovesbdb[64][1 << 9];	// Bishop moves database
 ull magicmovesrdb[64][1 << 12];	// Rook moves database
 

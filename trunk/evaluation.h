@@ -10,12 +10,12 @@
 ///////////////////////////////////////////////////////////////
 // Scoring magic
 
-#define PAWN_SCORE	  100
+#define PAWN_SCORE		100
 #define KNIGHT_SCORE	310
 #define BISHOP_SCORE	305
-#define ROOK_SCORE	  500
-#define QUEEN_SCORE	 850
-#define KING_SCORE	  64000
+#define ROOK_SCORE		500
+#define QUEEN_SCORE		850
+#define KING_SCORE		64000
 
 const int PieceScore[6] =
 {
