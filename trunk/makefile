@@ -3,15 +3,29 @@
 
 MODEL = s
 CC = g++
-
-# 	`-s` 				option removes all symbol table and relocation information from the executable
-
-# 	`-fomit-fame-pointer` 	makes programs faster at runtime, but makes debugging impossible. -O turns on -fomit-frame-pointer on machines 
-#  					where doing so does not interfere with debugging. x86 processors need the frame pointer for debugging, so -fomit-frame-pointer is not turned on by default.
-CFLAGS = -O3 -ffast-math -fomit-frame-pointer -s -msse
+CFLAGS = -s -O3 -ffast-math -fomit-frame-pointer -msse -mfpmath=sse
+# CFLAGS explanation
+# 	-s
+#		Option removes all symbol table and relocation information from the executable
+# 	-fomit-fame-pointer
+#		Makes programs faster at runtime, but makes debugging impossible.
+#		x86 processors need the frame pointer for debugging.
+#	-mfpmath=sse
+#		Use scalar floating point instructions present in the SSE instruction set.
+#		This instruction set is supported by Pentium3 and newer chips,
+#		in the AMD line by Athlon-4, Athlon-xp and Athlon-mp chips.
+#		Later version, present only in Pentium4 and the future AMD x86-64 chips
+#		supports double precision arithmetics too.
+#		The resulting code should be considerably faster in the majority of cases
+#		and avoid the numerical instability problems of 387 code,
+#		but may break some existing code that expects temporaries to be 80bit.
+#	-msse
+#		Needed to activate sse instructions used by `-mfpmath=sse`
+#	-ffast-math
+#		Enable unsafe math optimizations. We don't rely on ISO specifications.
 
 all: main.o board.o pieces.o magic.o opendb.o engine.o acn.o xboard.o rand.o evaluation.o rand.o hash.o
-	$(CC) $(CFLAGS) main.o magic.o board.o pieces.o opendb.o engine.o acn.o xboard.o rand.o hash.o evaluation.o -s -o BlitzKibitz 
+	$(CC) $(CFLAGS) -o BlitzKibitz main.o magic.o board.o pieces.o opendb.o engine.o acn.o xboard.o rand.o hash.o evaluation.o
 
 main.o: main.cpp
 	$(CC) $(CFLAGS) -c main.cpp
