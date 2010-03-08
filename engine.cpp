@@ -4,8 +4,8 @@
 // BestMove search Algorithm
 
 Move BestMove;
-int MAX_DEPTH = 5;
-int DEPTH_LIMIT = 5;
+int MAX_DEPTH = 7;
+int DEPTH_LIMIT = 7;
 
 // NOTE: Only use this for debug! It is not up to date (no transposition tables)
 int NegaMax(Board &cboard, int moveNr, int depth)
@@ -106,12 +106,12 @@ int AlphaBeta(const Board &cboard, const int moveNr, const int max_depth, const 
 		// did we calculate this already?
 		if (zkey == ht.zkey && pzkey == ht.pzkey &&
 			ht.npiece == cboard.GetPieceCount() &&
-			ht.depth >= MAX_DEPTH-depth) {
+			ht.depth >= max_depth-depth) {
 
 			if (ht.exact) {
 				++hits;
-				if (ht.depth - (MAX_DEPTH-depth) >= 2) ++hd2;
-				if (ht.depth - (MAX_DEPTH-depth) >= 3) ++hd3;
+				if (ht.depth - (max_depth-depth) >= 2) ++hd2;
+				if (ht.depth - (max_depth-depth) >= 3) ++hd3;
 				return ht.score;
 			}
 			else {
@@ -124,8 +124,6 @@ int AlphaBeta(const Board &cboard, const int moveNr, const int max_depth, const 
 	}
 	
 	// Get moves and check them
-	
-	int tstart = clock();
 	
 	bool hexact = false;
 	vector<Move> mvs = cboard.GetMoves();
@@ -159,7 +157,7 @@ int AlphaBeta(const Board &cboard, const int moveNr, const int max_depth, const 
 		int score = -AlphaBeta(newboard, moveNr+1, max_depth, depth+1, -beta, -alpha);
 		
 		if (score >= beta) {
-			recordHash(zkey, pzkey, false, false, beta, MAX_DEPTH-depth, cboard.GetPieceCount());
+			recordHash(zkey, pzkey, false, false, beta, max_depth-depth, cboard.GetPieceCount());
 			return beta;
 		}
 		if (score > alpha) {
@@ -171,14 +169,8 @@ int AlphaBeta(const Board &cboard, const int moveNr, const int max_depth, const 
 		}
 	}
 	
-	int extra_depth=0;
-	if (depth==0 && MAX_DEPTH < DEPTH_LIMIT && (double)(clock() - tstart) / CLOCKS_PER_SEC < 2) {
-		extra_depth = 1;
-		alpha = AlphaBeta(cboard, moveNr, max_depth+extra_depth);
-	}
-	
 	// store the key
-	recordHash(zkey, pzkey, hexact, true, alpha, MAX_DEPTH-depth, cboard.GetPieceCount());
+	recordHash(zkey, pzkey, hexact, true, alpha, max_depth-depth, cboard.GetPieceCount());
 	
 	return alpha;
 }
