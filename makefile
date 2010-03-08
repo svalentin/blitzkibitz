@@ -3,6 +3,8 @@
 
 CC = g++
 CFLAGS = -s -O3 -ffast-math -fomit-frame-pointer -msse -mfpmath=sse
+#CFLAGS = -g -msse
+
 # CFLAGS explanation
 #	-s
 #		Option removes all symbol table and relocation information from the executable
@@ -59,8 +61,9 @@ pieces.o: pieces.cpp pieces.h
 engine.o: engine.cpp engine.h
 	$(CC) $(CFLAGS) -c engine.cpp
 
-run: sah openings.bk
-	./sah
+run: BlitzKibitz openings.bk
+	./BlitzKibitz
 
-clean: sah
-	rm sah
+clean: BlitzKibitz
+	rm BlitzKibitz
+	rm *.o

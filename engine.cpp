@@ -185,11 +185,9 @@ int AlphaBeta(const Board &cboard, const int moveNr, const int max_depth, const 
 
 int IDDFS(const Board &cboard, const int moveNr, const int max_depth)
 {
-	int i,score;
-	do {
-		score=AlphaBeta(cboard, moveNr,i);
-		i++;
-	}while(cboard.check != MATE && i<max_depth);
+	int score = 0;
+	for (int cdepth=1; cboard.check != MATE && cdepth<max_depth; ++cdepth)
+		score = AlphaBeta(cboard, moveNr, cdepth);
 	return score;
 }
 
