@@ -169,7 +169,7 @@ string EncodeACN(Move &mv, Board &board)
 			acn += "+";
 		if (mv.check == MATE)
 			acn += "#";
-		fprintf(flog, "\n%s\n", acn.c_str());
+		fprintf(flog, "%s\n", acn.c_str());
 		return acn;
 	}
 	
@@ -179,7 +179,7 @@ string EncodeACN(Move &mv, Board &board)
 			acn += "+";
 		if (mv.check == MATE)
 			acn += "#";
-		fprintf(flog, "\n%s\n", acn.c_str());
+		fprintf(flog, "%s\n", acn.c_str());
 		return acn;
 	}
 	

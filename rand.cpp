@@ -94,6 +94,19 @@ void randinit(int flag)
 }
 
 
+// Get a random 64-bit number
+ull GetRand64()
+{
+	static int i=256, cnt=0;
+	if (i>254) {
+		randinit(cnt++);
+		isaac();
+		i=0;
+	}
+	return (((ull) randrsl[i++] << 32ULL) | ((ull) randrsl[i++]));
+}
+
+
 // for testing uncomment this and you shall see some random stuff on screen
 /*
 int main()

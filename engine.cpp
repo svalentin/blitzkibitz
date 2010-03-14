@@ -98,6 +98,7 @@ int AlphaBeta(const Board &cboard, const int moveNr, const int max_depth, const 
 
 	// Transposition table stuff
 	
+	// TODO: maintain hash key with MakeMove and not recalculate it here
 	ull zkey = GetZobristKey(cboard);
 	ull pzkey = GetPawnZobristKey(cboard);
 	HElem ht = GetHElem(GetHashIndex(zkey));

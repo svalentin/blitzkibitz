@@ -3,7 +3,7 @@
 
 CC = g++
 CFLAGS = -s -O3 -ffast-math -fomit-frame-pointer -msse -mfpmath=sse -Wno-deprecated
-#CFLAGS = -g -msse
+#CFLAGS = -g -msse -DNORAND
 
 # CFLAGS explanation
 #	-s
