@@ -1,23 +1,16 @@
-#ifndef HASH_H_
-#define HASH_H_
-
-#include "rand.h"
-#include "pieces.h"
-#include "board.h"
-
-#include <ctime>
-
-typedef unsigned long long ull;
+#ifndef _HASH_H_
+#define _HASH_H_
 
 const int HASH_SIZE = 3500017;
+extern U64 zobristPieces[14][64], zobristSide, zobristCastling[4], zobristEnPassant[9];
 
 class HElem
 {
 	public:
-	ull zkey;				// zobrist key
-	ull pzkey;				// pawn zobrist key
-	bool exact;				// true = exact value	|	false = check lbound
-	bool lbound;			// true = lowerbound	|	false = upperbound
+	U64 zkey;				// zobrist key
+	U64 pzkey;				// pawn zobrist key
+	bool exact;				// true = exact value   |   false = check lbound
+	bool lbound;			// true = lowerbound	|   false = upperbound
 	int score;				// evaluated score
 	unsigned char depth;	// depth calculated from this point
 	unsigned char npiece;	// number of pieces left on the board
@@ -25,10 +18,10 @@ class HElem
 	// Constructors
 	HElem()
 	{
-		zkey = exact = lbound = score = depth = npiece = 0;
+		zkey = score = depth = npiece = 0;
+		exact = lbound = false;
 	}
-	HElem(ull zkey, bool exact, bool lbound, int score,
-		unsigned char depth, unsigned char npiece)
+	HElem(U64 zkey, bool exact, bool lbound, int score,unsigned char depth, unsigned char npiece)
 	{
 		this->zkey = zkey;
 		this->exact = exact;
@@ -42,19 +35,18 @@ class HElem
 extern HElem HTable[HASH_SIZE];
 
 void InitHash();
-ull GetZobristKey(const Board &board);
-ull GetPawnZobristKey(const Board &board);
+U64 GetZobristKey(const Board *GameBoard,const int iColor);
+U64 GetPawnZobristKey(const Board *board);
 
-inline int GetHashIndex(const ull key)
+inline int GetHashIndex(const U64 key)
 {
-	return key % HASH_SIZE;
+	return (int)(key % HASH_SIZE);
 }
 
-inline int GetHashIndexFromBoard(const Board &board)
+inline int GetHashIndexFromBoard(const Board *GameBoard,const int iColor)
 {
-	return GetHashIndex(GetZobristKey(board));
+	return GetHashIndex(GetZobristKey(GameBoard,iColor));
 }
-
 
 inline HElem GetHElem(const int index)
 {
@@ -63,4 +55,4 @@ inline HElem GetHElem(const int index)
 
 void SetHElem(const int index, const HElem elem);
 
-#endif
+#endif	_HASH_H_

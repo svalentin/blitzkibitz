@@ -1,27 +1,9 @@
-#ifndef _EVALUATION_H_
-#define _EVALUATION_H_
+#ifndef _EVALUATE_H_
+#define _EVALUATE_H_
 
-#include "pieces.h"
-#include "magic.h"
-#include "hash.h"
+extern U64 ullNodesSearched;
 
-#define NORAND
-
-///////////////////////////////////////////////////////////////
-// Scoring magic
-
-#define PAWN_SCORE		100
-#define KNIGHT_SCORE	310
-#define BISHOP_SCORE	305
-#define ROOK_SCORE		500
-#define QUEEN_SCORE		850
-#define KING_SCORE		64000
-
-const int PieceScore[6] =
-{
-	PAWN_SCORE, KNIGHT_SCORE, BISHOP_SCORE,
-	ROOK_SCORE, QUEEN_SCORE, KING_SCORE
-};
+const int IsolatedPawnPenalty[8] = {10, 12, 14, 18, 18, 14, 12, 10};
 
 const int AttackScore[64] = 
 {
@@ -35,8 +17,6 @@ const int AttackScore[64] =
 	0,  0,  0,  0,  0,  0,  0,  0,
 };
 
-const int IsolatedPawnPenalty[8] = {10, 12, 14, 18, 18, 14, 12, 10};
-	
 const int PiecePositionScore[7][64] =
 {
 	// Pawn scores White
@@ -118,10 +98,6 @@ const int PiecePositionScore[7][64] =
 	}
 };
 
-inline void evalPieces(const Board &cboard, int &wscore, int &bscore);
-inline void evalPawn(const Board &cboard, const int gameStage, int &wscore, int &bscore);
-inline void evalKing(const Board &cboard, const bool gameStage, int &wscore, int &bscore);
-int CalculateScore(const Board &cboard);
-int SCalculateScore(const Board &cboard);
+int EvaluateBoard(Board const*const GameBoard,const int iColor);
 
 #endif

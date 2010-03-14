@@ -1,688 +1,499 @@
-#include "board.h"
-
-// Lookuptable for LSB function
-int LookupBit[64] = 
-{
-	63,  0, 58,  1, 59, 47, 53,  2,
-	60, 39, 48, 27, 54, 33, 42,  3,
-	61, 51, 37, 40, 49, 18, 28, 20,
-	55, 30, 34, 11, 43, 14, 22,  4,
-	62, 57, 46, 52, 38, 26, 32, 41,
-	50, 36, 17, 19, 29, 10, 13, 21,
-	56, 45, 25, 31, 35, 16,  9, 12,
-	44, 24, 15,  8, 23,  7,  6,  5
-};
-
-///////////////////////////////////////////////////////////////
-// Board class
+#include<stdio.h>
+#include<string.h>
+#include<vector>
+#include<algorithm>
+#include"constants.h"
+#include"bitboards.h"
+#include"board.h"
+#include"magic.h"
+#include"moves.h"
+#include"hash.h"
+using namespace std;
 
 /// Function that initialises the board.
 /// Places pieces at starting location and other initialisation stuff.
-void Board::InitChessboard()
+void InitChessboard(Board*board)
 {
-	player = enPassant = check = 0;
+	memset(board,0,sizeof(Board));
+	board->bbPieceBoards[0]	|= INITIAL_POS_PAWNS_W;
+	board->bbPieceBoards[7]	|= INITIAL_POS_PAWNS_B;
+	board->bbPieceBoards[1]	|= INITIAL_POS_KNIGHTS_W;
+	board->bbPieceBoards[8]	|= INITIAL_POS_KNIGHTS_B;
+	board->bbPieceBoards[2]	|= INITIAL_POS_BISHOPS_W;
+	board->bbPieceBoards[9]	|= INITIAL_POS_BISHOPS_B;
+	board->bbPieceBoards[3]	|= INITIAL_POS_ROOKS_W;
+	board->bbPieceBoards[10]|= INITIAL_POS_ROOKS_B;
+	board->bbPieceBoards[4]	|= INITIAL_POS_QUEEN_W;
+	board->bbPieceBoards[11]|= INITIAL_POS_QUEEN_B;
+	board->bbPieceBoards[5]	|= INITIAL_POS_KING_W;
+	board->bbPieceBoards[12]|= INITIAL_POS_KING_B;
+	board->bbPieceBoards[6]	|= INITIAL_POS_WHITE_PIECES;
+	board->bbPieceBoards[13]|= INITIAL_POS_BLACK_PIECES;
+	board->shEnPassant	= 0;
+	board->chCastlingRights	= 0x0;
 
-	memset(bb, 0, sizeof(bb));
-	bb[0]	|= INITIAL_POS_PAWN_W;
-	bb[7]	|= INITIAL_POS_PAWN_B;
-	bb[1]	|= INITIAL_POS_KNIGHT_W;
-	bb[8]	|= INITIAL_POS_KNIGHT_B;
-	bb[2]	|= INITIAL_POS_BISHOP_W;
-	bb[9]	|= INITIAL_POS_BISHOP_B;
-	bb[3]	|= INITIAL_POS_ROOK_W;
-	bb[10]	|= INITIAL_POS_ROOK_B;
-	bb[4]	|= INITIAL_POS_QUEEN_W;
-	bb[11]	|= INITIAL_POS_QUEEN_B;
-	bb[5]	|= INITIAL_POS_KING_W;
-	bb[12]	|= INITIAL_POS_KING_B;
-	bb[6]	|= INITIAL_POS_WHITE_PIECES;
-	bb[13]	|= INITIAL_POS_BLACK_PIECES;
-	enPassant	= 0;
-	castling	= 0x0F;
+	int sq;
+	for (int i=PAWNS_W; i<=KING_W; ++i)
+	{
+		U64 aux = board->bbPieceBoards[i];
+		FOR_BIT(aux,sq)
+			board->ullBoardZKey ^= zobristPieces[i][sq];
+	}
+	for (int i=PAWNS_B; i<=KING_B; ++i)
+	{
+		U64 aux =board->bbPieceBoards[i];
+		FOR_BIT(aux,sq)
+			board->ullBoardZKey ^= zobristPieces[i][sq];
+	}
+	//board->ullBoardZKey=GetZobristKey(board,WHITE);
+	board->ullPawnZKey=GetPawnZobristKey(board);
+}
+
+void PrintBoard(Board*board,FILE *fout)
+{
+	U64 aux=1;
+	int i,type,k=7;
+	char ch;
+	fprintf(fout,"   abcdefgh\n +---------\n8| ");
+	for(i=63;i>=0;i--)
+	{
+		type=board->GetPieceType(i);
+		if(type==0) ch='P';
+		else if(type==1) ch='N';
+		else if(type==2) ch='B';
+		else if(type==3) ch='R';
+		else if(type==4) ch='Q';
+		else if(type==5) ch='K';
+		else if(type==7) ch='p';
+		else if(type==8) ch='n';
+		else if(type==9) ch='b';
+		else if(type==10) ch='r';
+		else if(type==11) ch='q';
+		else if(type==12) ch='k';
+		else ch='.';
+		fprintf(fout,"%c",ch);
+		if(i%8==0 && i) fprintf(fout,"\n%d| ",k--);
+	}
+	fprintf(fout,"\n");
+}
+
+void PrintBitBoard(const U64 bitboard,FILE *fout)
+{   
+	U64 bit = 1LL<<63;
+	for (int i=0; i<8; i++)
+	{
+		//printf("  "); // whitespace to align with the ShowPieces board
+		//fprintf(fout,"  ");
+		for (int j=0; j<8; ++j, bit>>=1)
+			//printf("%d", (bitboard & bit) ? 1 : 0);
+			fprintf(fout,"%d", (bitboard & bit) ? 1 : 0);
+		//printf("\n");
+		fprintf(fout,"\n");
+	}
+	fprintf(fout,"\n");
+}
+
+const U64 Board::GetBoardZKey(const int iColor) const
+{
+	int sq;
+	U64 aux = chCastlingRights,key=ullBoardZKey;
+	FOR_BIT(aux,sq)
+		key ^= zobristCastling[sq];
+	if(iColor) key^=zobristSide;
+	return key;
+}
+
+const U64 Board::GetPawnZKey() const
+{
+	return ullPawnZKey;
+}
+
+/// Returns the bitboard with positions occupied by all pieces.
+const U64 Board::GetOccupancy() const
+{
+	return bbPieceBoards[WHITE_PIECES] | bbPieceBoards[BLACK_PIECES];
+}
+
+const U64 Board::GetSideOccupancy(const int iColor) const
+{
+	return bbPieceBoards[WHITE_PIECES+7*iColor];
+}
+
+const U64 Board::GetPieceBoard(const int iType,const int iColor) const
+{
+	return bbPieceBoards[iType+7*iColor];
+}
+
+const U64 Board::GetAttackBoard(const int iColor) const
+{
+	int iSq;
+	U64 bbAttackBoard=0,bbAux,bbOcc=GetOccupancy();
+
+	bbAux=bbPieceBoards[PAWN+7*iColor]; // pawn attacks
+	FOR_BIT(bbAux,iSq)
+	{
+		bbAttackBoard|=PAttackMagic(iSq,iColor);
+	}
+
+	bbAux=bbPieceBoards[KNIGHT+7*iColor]; // knight attacks
+	FOR_BIT(bbAux,iSq)
+	{
+		bbAttackBoard|=Nmagic(iSq);
+	}
+
+	bbAux=bbPieceBoards[BISHOP+7*iColor]; // bishop attacks
+	FOR_BIT(bbAux,iSq)
+	{
+		bbAttackBoard|=Bmagic(iSq,bbOcc);
+	}
+
+	bbAux=bbPieceBoards[ROOK+7*iColor]; // rook attacks
+	FOR_BIT(bbAux,iSq)
+	{
+		bbAttackBoard|=Rmagic(iSq,bbOcc);
+	}
+
+	bbAux=bbPieceBoards[QUEEN+7*iColor]; // queen attacks
+	FOR_BIT(bbAux,iSq)
+	{
+		bbAttackBoard|=Qmagic(iSq,bbOcc);
+	}
+
+	bbAux=bbPieceBoards[KING+7*iColor]; // king attacks
+	FOR_BIT(bbAux,iSq)
+	{
+		bbAttackBoard|=Kmagic(iSq);
+	}
+
+	return bbAttackBoard;
 }
 
 /// Function that returns the type (an integer) of the piece on the position pos
 /// pos is an index to the bit on the board.
-int Board::GetPieceType(const int pos) const
+const int Board::GetPieceType(const int pos) const
 {
-	ull pieceBoard = 0;
-	SET_BIT(pieceBoard, pos);
+	U64 bbPieceBoard = 0;
+	bbPieceBoard=PLACE_PIECE(bbPieceBoard,pos);
 
 	// white pieces
-	for (int i=0; i<6; ++i)
-		if (pieceBoard & bb[i])
+	for(int i=0; i<6; ++i)
+		if (bbPieceBoard & bbPieceBoards[i])
 			return i;
 
 	// black pieces
-	for (int i=7; i<13; ++i)
-		if (pieceBoard & bb[i])
+	for(int i=7; i<13; ++i)
+		if (bbPieceBoard & bbPieceBoards[i])
 			return i;
-
 	return -1;
 }
 
-int Board::GetPieceCount() const
+const int Board::GetPieceCount() const
 {
-	ull aux = bb[WHITE_PIECE] | bb[BLACK_PIECE];
-	int con=0;
-	for (int pp = LSBi(aux); pp != 64; pp = LSBi(aux)) con++;
-	return con;
+	return Count1s(bbPieceBoards[WHITE_PIECES] | bbPieceBoards[BLACK_PIECES]);
 }
 
-/// Function that prints a human-readable board with line/column marks
-void Board::PrintBoard(FILE *fout) const
+const void Board::AppendMoves(vector<Move>& vMoves,U64 bbMoveBoard,const int iType,const int iSrc,const int iColor) const
 {
-	char ch;
-	fprintf(fout, "  abcdefgh\n  --------\n8|");
-	for (int i=63, k=7; i>=0; --i) {
-		int type = GetPieceType(i);
-		if (type >= 0) ch = PieceIndexMap[type];
-		else ch = '.';
-		fprintf(fout, "%c", ch);
-		if ((i%8 == 0) && i) fprintf(fout, "\n%d|", k--);
-	}
-	fprintf(fout, "\n");
-	fprintf(fout, "  --------\n  abcdefgh\n");
-	if (player) fprintf(fout, "Black to move\n");
-	else fprintf(fout, "White to move\n");
-}
-
-/// Function that prints a bit board on screen using 1 and 0
-void Board::PrintBitBoard(const ull bitboard) const
-{   
-	ull bit = 1LL<<63;
-	for (int i=0; i<8; ++i) {
-		printf("  "); // whitespace to align with the ShowPieces board
-//		fprintf(fout,"  ");
-		for (int j=0; j<8; ++j, bit>>=1)
-			printf("%d", (bitboard & bit) ? 1 : 0);
-		//  fprintf(fout,"%d", (bitboard & bit) ? 1 : 0);
-		printf("\n");
-		//	fprintf(fout,"\n");
-	}
-	printf("\n");
-}
-
-/// Apply castling on a board given the position of the rook and king.
-/// It does not check for validity!
-void Board::applyCastling(pair<int, int> R, pair<int, int> K)
-{
-	int p1 = player * 7;
-	int p2 = player * 56;
-
-#ifdef DEBUG
-	Board old = *this;
-#endif
-	
-	// pierde dreptul la rocada pe viitor
-	CLEAR_BIT_UCHAR(castling, player*2);
-	CLEAR_BIT_UCHAR(castling, player*2+1);
-
-
-	// rock
-	SET_BIT(bb[3 + p1], R.second + p2);
-	SET_BIT(bb[6 + p1], R.second + p2);
-	CLEAR_BIT(bb[3 + p1], R.first + p2);
-	CLEAR_BIT(bb[6 + p1], R.first + p2);
-	
-	// king
-	SET_BIT(bb[5 + p1], K.second + p2);
-	SET_BIT(bb[6 + p1], K.second + p2);
-	CLEAR_BIT(bb[5 + p1], K.first + p2);
-	CLEAR_BIT(bb[6 + p1], K.first + p2);
-	
-#ifdef DEBUG
-	ull aux = bb[5];
-	int x = LSBi(aux);
-		x = LSBi(aux);
-	if (x!=64) {
-		// avem 2 regi pe tabla!
-		printf("2 regi pe tabla! in functia Board::applyCastling\n");
-		PrintBitBoard(bb[5]);
-		PrintBitBoard(old.bb[5]);
-		old.ShowPieces();
-		printf("%d %d + %d %d + %d\n", R.first, R.second, K.first, K.second, player);
-		printf("%d %d + %d %d\n", R.first + p2, R.second + p2, K.first + p2, K.second + p2);
-		
-		exit(0);
-	}
-#endif
-}
-
-/// Given a Move, it applies that move on the board.
-/// It does not check for validity! It presumes the move is valid on the board
-int Board::MakeMove(const Move mv)
-{	
-	// presupunand ca a facut o mutare valida, 
-	// jucatorul curent iese din check; daca a fost :P
-	if (check != -1)
-		check = 0;
-
-	// chess	
-	if (mv.check == CHECK)
-		check |= CHECK;
-	
-	// fatality
-	if (mv.check == MATE)
-		check |= MATE;
- 
-	if (mv.flags == KING_SIDE_CASTLE) {
-		applyCastling(make_pair(0,2), make_pair(3,1));
-		return 0;
-	}
-
-	if (mv.flags == QUEEN_SIDE_CASTLE) {
-		applyCastling(make_pair(7,4), make_pair(3,5));
-		return 0;
-	}
- 
-	int dest = mv.destination;
-	int src  = mv.source;
-	int DestPieceType = GetPieceType(dest);
-	int SrcPieceType  = GetPieceType(src);
-	int DestPieceColor, SrcPieceColor;
-	
-	// daca regele sau tura se misca pierdem dreptul la rocada
-	if (mv.piece == 'K') {
-		CLEAR_BIT_UCHAR(castling, player*2);
-		CLEAR_BIT_UCHAR(castling, player*2+1);
-	}
-	
-	if (mv.piece == 'R') {
-		if (src%8 == 0) CLEAR_BIT_UCHAR(castling, player*2);
-		if (src%8 == 7) CLEAR_BIT_UCHAR(castling, player*2+1);
-	}
-		
-	// dreptul de enpass se pierde (indiferent de mutare)
-	enPassant = 0;
-	// un pion ce se deplaseaza 2 patratele
-	// ofera dreptul de enPassant adversarului
-	if (mv.piece == 'P' && abs(dest - src) == 16) {
-		enPassant = dest + (player ? 8 : -8);
-	}
-	
-	if (SrcPieceType <= 5)
-		SrcPieceColor = 6;
-	else
-		SrcPieceColor = 13;
-
-	if (DestPieceType <= 5)
-		DestPieceColor = 6;
-	else
-		DestPieceColor = 13;
-	
-
-	SET_BIT(bb[SrcPieceType], dest);
-	CLEAR_BIT(bb[SrcPieceType], src);
-
-	SET_BIT(bb[SrcPieceColor], dest);
-	CLEAR_BIT(bb[SrcPieceColor], src);
-
-	// enpass
-	if (mv.flags == ENPASS) {
-		// remove the pawn "in front" of the destination
-		if (player) {
-			CLEAR_BIT(bb[0], dest + 8);
-			CLEAR_BIT(bb[6], dest + 8);
-		}
-		else {
-			CLEAR_BIT(bb[7], dest - 8);
-			CLEAR_BIT(bb[13], dest - 8);
-		}
-	}
-	
-	if (DestPieceType != -1) {
-		CLEAR_BIT(bb[DestPieceType], dest);
-		CLEAR_BIT(bb[DestPieceColor], dest);
-		// if a rock is captured
-		if (toupper(PieceIndexMap[DestPieceType]) == 'R') {
-			if (dest%8 == 0) CLEAR_BIT_UCHAR(castling, (!player)*2);
-			if (dest%8 == 7) CLEAR_BIT_UCHAR(castling, (!player)*2+1);
-		}
-	}
-	
-	// promote
-	if (mv.promote_to) {
-		int type = PieceMap[mv.promote_to] + 7*player;
-		
-		CLEAR_BIT(bb[SrcPieceType], dest);
-		SET_BIT(bb[type], dest);
-	}
-
-	return 0;
-}
-
-/// Returns the bitboard with positions occupied by all pieces.
-ull Board::GetOccupancy() const
-{
-	return bb[6] | bb[13];
-}
-
-/// Verifies if given squares are controled by the enemy
-const bool Board::VerifyChess(const ull pos, const int side) const
-{
-	ull bb_cpy;
-	int piece;
-	int piece_pos;
-	
-	ull occ = GetOccupancy();
-	
-	// KNIGHT
-	piece = 1 + 7*side;
-	bb_cpy = bb[piece];
-	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy)) 
-		if (pos & Nmagic(piece_pos))
-			return true;
-
-	// BISHOP
-	piece = 2 + 7*side;
-	bb_cpy = bb[piece];
-	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy))
-		if (pos & Bmagic(piece_pos, occ))
-			return true;
-
-	// ROCK
-	piece = 3 + 7*side;
-	bb_cpy = bb[piece];
-	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy))
-		if (pos & Rmagic(piece_pos, occ))
-			return true;
-  
-	// QUEEN
-	piece = 4 + 7*side;
-	bb_cpy = bb[piece];
-	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy))
-		if (pos & Qmagic(piece_pos, occ))
-			return true;
-	
-	// KING
-	piece = 5 + 7*side;
-	bb_cpy = bb[piece];
-	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy))
-		if (pos & Kmagic(piece_pos))
-			return true;
-	
-	// PAWNS
-	int pl = side ? -1 : 1;
-	piece = 0 + 7*side;
-	bb_cpy = bb[piece];
-	
-	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy)) {
-		int col = piece_pos%8;
-		ull pw = 0;
-
-		// attack right corner
-		if (!(side && col == 7) && !(!side && col == 0))
-			SET_BIT(pw, piece_pos + 7 * pl);
-		
-		// attack left corner
-		if (!(!side && col == 7) && !(side && col == 0))
-			SET_BIT(pw, piece_pos + 9 * pl);
-		
-		if (pos & pw)
-			return true;
-	}
-
-	return false;
-}
-
-/// Validates castlings
-const bool Board::validCastling(const int side) const
-{
-	ull chess_field, occ_field, pawns_att;
-	
-	if (!side) {
-		chess_field = 0xEULL<<(56*player);
-		occ_field = 0x6ULL<<(56*player);
-		pawns_att = 0x1F00ULL<<(40*player);
-	}
-	else {
-		chess_field = 0x38ULL<<(56*player);
-		occ_field = 0x70ULL<<(56*player);
-		pawns_att = 0x7C00ULL<<(40*player);
-	}
-		
-	if (occ_field & (bb[WHITE_PIECE] | bb[BLACK_PIECE]))
-		return false;
-	
-	if (pawns_att & (bb[0 + 7*(!player)]))
-		return false;
-	
-	if (VerifyChess(chess_field, !player))
-		return false;
-	
-	return true;
-}
-
-
-int Board::WeGiveCheckOrMate(const Move mv) const
-{
-	int check = 0;
-	Board brdinf;
-	
-	SaveBoard(brdinf);
-	brdinf.MakeMove(mv);
-	
-	// if we check
-	if (brdinf.check != -1 && brdinf.VerifyChess(brdinf.bb[5 + 7*(!brdinf.player)], brdinf.player)) {
-		check = CHECK;
-		// if we mate
-		brdinf.player = !brdinf.player;
-		brdinf.check = -1;
-		vector<Move> tstm = brdinf.GetMoves();
-		if (!tstm.size())
-			check = MATE;
-	}
-
-	return check;
-}
-
-/// Given a piece, its source and valid locations as a bitboard
-/// append the moves in Move-class format to a vector of possible moves.
-const bool Board::appendMoves(vector<Move> &m, ull att, const int piece, const int source) const
-{
+	int iSq,iDestType=21;
 	Move mv;
-	mv.source = source;
-	mv.promote_to = mv.check = mv.flags = 0;
-	mv.player = player;
-	mv.piece = toupper(PieceIndexMap[piece]);
+	mv.iSrc=iSrc;
+	SET_BIT(mv.iType,iType);
+	bbMoveBoard^=(bbPieceBoards[WHITE_PIECES+7*iColor]&bbMoveBoard);
+
+	FOR_BIT(bbMoveBoard,iSq)
+	{
+		int iFlags=iColor;
+		CLEAR_BIT(mv.iType,iDestType+iColor*7);
+
+		iDestType=GetPieceType(iSq);
+		mv.iDest=iSq;
+		if(iDestType!=-1)
+		{
+			SET_BIT(mv.iType,iDestType+iColor*7); // it's good...leave it like that
+			SET_BITS(iFlags,CAP_INDEX);
+		}
+		mv.iFlags=iFlags;
+
+		Board board=*this; // Is move legal?
+		board.MakeMove(&mv);
+		if(KING_IN_CHECK(board.bbPieceBoards[KING_W+7*iColor],board.GetAttackBoard(!iColor))) continue;
+		else if(KING_IN_CHECK(board.bbPieceBoards[KING_W+7*(!iColor)],board.GetAttackBoard(iColor)))
+		{
+			SET_BITS(iFlags,CHECK_INDEX);
+			mv.iFlags=iFlags;
+		}
+		
+		vMoves.push_back(mv);
+	}
+}
+
+const void Board::AppendPawnNormalMoves(vector<Move>&vMoves,U64 bbMoveBoard,const int iSrc,const int iColor) const
+{
+	int iSq;
+	Move mv;
+	mv.iSrc=iSrc;
+	SET_BIT(mv.iType,PAWN);
 	
-	att ^= (bb[6 + 7*player] & att); // do not move a piece over one of the same color
-	for (int dest=LSBi(att); dest!=64; dest = LSBi(att)) {
-		mv.promote_to = 0;
-		if (mv.check != -1)
-			mv.check = 0;
-		mv.destination = dest;
-#ifdef DEBUG_MOVES
-		printf("[%c|(%c%d)]", mv.piece, 'h' - dest%8, dest/8 + 1);
-#endif
-		if (GetPieceType(dest) != -1)
-			mv.flags = CAPTURE;
-		else
-			mv.flags = 0;
-				
-		if (mv.piece == 'P') {
-			if (dest == enPassant && enPassant != 0)
-				mv.flags = ENPASS;
-			if (dest >= 56*(!player) && dest <= 7 + 56*(!player))
-				mv.promote_to = 'Q';
+	bbMoveBoard^=((bbPieceBoards[WHITE_PIECES]|bbPieceBoards[BLACK_PIECES])&bbMoveBoard);
+	const int num1s=Count1s(bbMoveBoard);
+	if(num1s==1 && abs(LSBi(bbMoveBoard)-iSrc)>8) return;
+	FOR_BIT(bbMoveBoard,iSq)
+	{
+		int iFlags=iColor;
+
+		mv.iDest=iSq;
+		if(ROW(iSq)==0 || ROW(iSq)==7) SET_BITS(iFlags,PROM_INDEX);
+		if(abs(LSBi(bbMoveBoard)-iSrc)>8) SET_BITS(iFlags,P2SM_INDEX);
+		mv.iFlags=iFlags;
+
+		Board board=*this; // Is move legal?
+		board.MakeMove(&mv);
+		if(KING_IN_CHECK(board.bbPieceBoards[KING_W+7*iColor],board.GetAttackBoard(!iColor))) continue;
+		else if(KING_IN_CHECK(board.bbPieceBoards[KING_W+7*(!iColor)],board.GetAttackBoard(iColor)))
+		{
+			SET_BITS(iFlags,CHECK_INDEX);
+			mv.iFlags=iFlags;
 		}
 
-		// daca dam check sau mat
-		if (check != -1)
-			mv.check = WeGiveCheckOrMate(mv);
-		
-		// daca ramanem in check
-		Board brdinf;
-		SaveBoard(brdinf);
-		brdinf.MakeMove(mv);
-		
-		bool ch = brdinf.VerifyChess(brdinf.bb[5 + 7*brdinf.player], !brdinf.player);
-		if ((brdinf.check && !ch) || !ch) {
-			m.push_back(mv);
-			if (check == -1)
-				return true;
-#ifdef DEBUG_MOVES
-			printf("v  ");
-#endif
-		}
-#ifdef DEBUG_MOVES
-		if (ch) printf("Ramanem in check!  ");
-#endif
+		vMoves.push_back(mv);
 	}
+}
+
+const void Board::AppendPawnAttackMoves(vector<Move>&vMoves,U64 bbMoveBoard,const int iSrc,const int iColor) const
+{
+	int iSq,iDestType=30;
+	U64 bbAttEnpas=0;
+	Move mv;
+	mv.iSrc=iSrc;
+	SET_BIT(mv.iType,PAWN);
 	
-	return false;
+	// get the normal pawn attacks...if any
+	bbMoveBoard&=(bbPieceBoards[WHITE_PIECES+(!iColor)*7]);
+	FOR_BIT(bbMoveBoard,iSq)
+	{
+		CLEAR_BIT(mv.iType,iDestType+iColor*7);
+		int iFlags=iColor|CAP_INDEX;
+
+		mv.iDest=iSq;
+		iDestType=GetPieceType(iSq);
+		if(ROW(iSq)==0 || ROW(iSq)==7) SET_BITS(iFlags,PROM_INDEX);
+		SET_BIT(mv.iType,iDestType+iColor*7); // it's good...leave it like that
+		mv.iFlags=iFlags;
+
+		Board board=*this; // Is move legal?
+		board.MakeMove(&mv);
+		if(KING_IN_CHECK(board.bbPieceBoards[KING_W+7*iColor],board.GetAttackBoard(!iColor))) continue;
+		else if(KING_IN_CHECK(board.bbPieceBoards[KING_W+7*(!iColor)],board.GetAttackBoard(iColor)))
+		{
+			SET_BITS(iFlags,CHECK_INDEX);
+			mv.iFlags=iFlags;
+		}
+		
+		vMoves.push_back(mv);
+	}
+	// now get en passant attacks...if any
+	bbAttEnpas=PEnpasMagic(iSrc,iColor);
+	bbAttEnpas&=(bbPieceBoards[PAWNS_W+(!iColor)*7]);
+	SET_BITS(mv.iFlags,EPAS_INDEX);
+	FOR_BIT(bbAttEnpas,iSq)
+	{
+		mv.iDest=iSq+(iColor?-8:8);
+		if(CHECK_ENPAS(shEnPassant,iSq%8,!iColor)) // if the pawn on this column is suseptible to en passant
+		{
+			int iFlags=iColor|CAP_INDEX;
+			SET_BIT(mv.iType,PAWNS_B); // set 7th bit so as to indicate a captured pawn (does not imply it's a black pawn)
+
+			Board board=*this; // Is move legal?
+			board.MakeMove(&mv);
+			if(KING_IN_CHECK(board.bbPieceBoards[KING_W+7*iColor],board.GetAttackBoard(!iColor))) continue;
+			else if(KING_IN_CHECK(board.bbPieceBoards[KING_W+7*(!iColor)],board.GetAttackBoard(iColor)))
+			{
+				SET_BITS(iFlags,CHECK_INDEX);
+			}
+			
+			mv.iFlags=iFlags;
+			vMoves.push_back(mv);
+		}
+	}
 }
 
 /// Returns a vector with all valid Moves on the current board.
 /// It takes all the information from the internal state of the Board.
-vector<Move> Board::GetMoves() const
+const vector<Move> Board::GetMoves(const int iColor) const
 {
-	vector<Move> M;
-	M.reserve(32);	// reserve memory for 32 moves, so we can avoid ~4 reallocations
-	ull occ, bb_cpy;
-	int piece_pos;
-	int piece;
-	
-	occ = GetOccupancy();
-	
-	// kNight
-	piece = 1 + 7*player;
-	bb_cpy = bb[piece];
-	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy)) {
-		if (appendMoves(M, Nmagic(piece_pos), piece, piece_pos))
-			return M;
-	}
-	
-	// Bishop
-	piece = 2 + 7*player;
-	bb_cpy = bb[piece];
-	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy)) {
-		if (appendMoves(M, Bmagic(piece_pos, occ), piece, piece_pos))
-			return M;
-	}
-	
-	// Rock
-	piece = 3 + 7*player;
-	bb_cpy = bb[piece];
-	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy)) {
-		if (appendMoves(M, Rmagic(piece_pos, occ), piece, piece_pos))
-			return M;
-	}
-		
-	// Queen
-	piece = 4 + 7*player;
-	bb_cpy = bb[piece];
-	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy)) {
-		if (appendMoves(M, Qmagic(piece_pos, occ), piece, piece_pos))
-			return M;
-	}
-	
-	// King
-	piece = 5 + 7*player;
-	bb_cpy = bb[piece];
-	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy)) {
-		if (appendMoves(M, Kmagic(piece_pos), piece, piece_pos))
-			return M;
-	}
-	
-	Move m;
+	Move mv;
+	vector<Move> vMoves;
+	vMoves.reserve(32);	// reserve memory for 32 moves, so we can avoid ~4 reallocations
+	const U64 bbEnemyAttacks=GetAttackBoard(!iColor);
+	const U64 bbOcc=GetOccupancy();
+	U64 bbMoveBoard=0;
+	int iSq;
 
-	// CASTLING KING SIDE
-	if (castling & (1 << (player<<1)) && validCastling(0)) {
-		m.player = player;
-		m.flags = KING_SIDE_CASTLE;
-		
-		// daca dam check sau mat
-		m.check = 0;
-		if (check != -1)
-			m.check = WeGiveCheckOrMate(m);
-		
-		M.push_back(m);
-		if (check == -1)
-			return M;
-#ifdef DEBUG_MOVES
-		printf("O-O  ");
-#endif
+	mv.iFlags|=iColor;	//+--- sets the corresponding color bit (this way we avoid an if :) )
+
+	bbMoveBoard=bbPieceBoards[PAWN+7*iColor];	// Pawns
+	FOR_BIT(bbMoveBoard,iSq)
+	{
+		AppendPawnAttackMoves(vMoves,PAttackMagic(iSq,iColor),iSq,iColor);
+		AppendPawnNormalMoves(vMoves,PNormalMagic(iSq,iColor),iSq,iColor);
 	}
-	
-	// CASTLING QUEEN SIDE
-	if (castling & (2 << (player<<1)) && validCastling(1)) {
-		m.player = player;
-		m.flags = QUEEN_SIDE_CASTLE;
-		
-		// daca dam check sau mat
-		m.check = 0;
-		if (check != -1)
-			m.check = WeGiveCheckOrMate(m);
-		
-		M.push_back(m);
-		if (check == -1)
-			return M;
-#ifdef DEBUG_MOVES
-		printf("O-O-O  ");
-#endif
+
+	bbMoveBoard=bbPieceBoards[KNIGHT+7*iColor];	// Knights
+	FOR_BIT(bbMoveBoard,iSq)
+	{
+		AppendMoves(vMoves,Nmagic(iSq),KNIGHT,iSq,iColor);
 	}
-	
-	// PAWNS
-	ull p_att = 0, pl;
-	int poss;
-	
-	pl = player ? -1 : 1;
-	piece = 0 + 7*player;
-	bb_cpy = bb[piece];
 
-	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy)) {
-		int col = piece_pos%8;
-		p_att = 0;
+	bbMoveBoard=bbPieceBoards[BISHOP+7*iColor];	// Bishops
+	FOR_BIT(bbMoveBoard,iSq)
+	{
+		AppendMoves(vMoves,Bmagic(iSq,bbOcc),BISHOP,iSq,iColor);
+	}
 
-		// move 1 square ahead
-		poss = piece_pos + 8 * pl;
-		if (GetPieceType(poss) == -1)
-			SET_BIT(p_att, poss);
+	bbMoveBoard=bbPieceBoards[ROOK+7*iColor];	// Rooks
+	FOR_BIT(bbMoveBoard,iSq)
+	{
+		AppendMoves(vMoves,Rmagic(iSq,bbOcc),ROOK,iSq,iColor);
+	}
 
-		// move 2 squares ahead
-		poss = piece_pos + 16 * pl;
-		if ((poss < 32) ^ player)
-			if (GetPieceType(poss) == -1 && GetPieceType(poss - 8*pl) == -1)
-				SET_BIT(p_att, poss);
+	bbMoveBoard=bbPieceBoards[QUEEN+7*iColor];	// Queens
+	FOR_BIT(bbMoveBoard,iSq)
+	{
+		AppendMoves(vMoves,Qmagic(iSq,bbOcc),QUEEN,iSq,iColor);
+	}
 
-		// attack right corner
-		if (!(player && col == 7) && !(!player && col == 0)) {
-			poss = piece_pos + 7 * pl;
-			int DestPieceType = GetPieceType(poss);
-			int DestPieceColor = !(DestPieceType <= 5);
-			if (DestPieceType != -1 && DestPieceColor == !player  || enPassant == poss)
-				SET_BIT(p_att, poss);
+	bbMoveBoard=bbPieceBoards[KING+7*iColor];	// King
+	FOR_BIT(bbMoveBoard,iSq)
+	{
+		AppendMoves(vMoves,Kmagic(iSq),KING,iSq,iColor);
+	}
+
+	if(!KING_IN_CHECK(GetPieceBoard(KING,iColor),bbEnemyAttacks))
+	{
+		if(CHECK_KING_CASTLING(chCastlingRights,iColor)) // king side castle
+		{
+			if(!(KCastleMagic(iColor)&bbEnemyAttacks) && !(KCastleMagic(iColor)&bbOcc) && (GetPieceBoard(ROOK,iColor)&(((U64)1)<<(iColor*56))))
+			{
+				SET_BITS(mv.iFlags,KSC_INDEX);
+				vMoves.push_back(mv);
+				CLEAR_BITS(mv.iFlags,KSC_INDEX);
+			}
 		}
-			
-		// attack left corner
-		if (!(!player && col == 7) && !(player && col == 0)) {
-			poss = piece_pos + 9 * pl;
-			int DestPieceType = GetPieceType(poss);
-			int DestPieceColor = !(DestPieceType <= 5);
-			if (DestPieceType != -1 && DestPieceColor == !player  || (enPassant == poss && enPassant != 0))
-				SET_BIT(p_att, poss);
+		if(CHECK_QUEEN_CASTLING(chCastlingRights,iColor)) // queen side castle
+		{
+			if(!(QCastleMagic(iColor)&bbEnemyAttacks) && !(QCastleMagic(iColor)&bbOcc) && (GetPieceBoard(ROOK,iColor)&(((U64)1)<<(7+iColor*56))))
+			{
+				SET_BITS(mv.iFlags,QSC_INDEX);
+				vMoves.push_back(mv);
+				CLEAR_BITS(mv.iFlags,QSC_INDEX);
+			}
 		}
-		if (appendMoves(M, p_att, piece, piece_pos))
-			return M;
 	}
-	
-	sort(M.begin(), M.end());
-	
-	return M;
+
+	return vMoves;
 }
 
-/// Saves board status
-void Board::SaveBoard(Board &brd) const
+const void Board::MakeMove(Move const * const mv)
 {
-	brd.player = player;
-	brd.castling = castling;
-	brd.check = check;
-	brd.enPassant = enPassant;
-	for (int i = 0; i < 14; i++)
-		brd.bb[i] = bb[i];
-}
+	const int iColor=mv->iFlags&1;
+	const int iType=LSBi(mv->iType);
 
-/// Loads a given board
-void Board::LoadBoard(const Board &brd)
-{
-	player = brd.player;
-	castling = brd.castling;
-	check = brd.check;
-	enPassant = brd.enPassant;
-	for (int i = 0; i < 14; i++)
-		bb[i] = brd.bb[i];
-}
+	if(IsKSCastle(mv->iFlags)) // apply king side castle
+	{
+		REVOKE_CASTLING(chCastlingRights,iColor);
 
-/// Operator = overloaded to load a given board
-Board& Board::operator=(const Board &brd)
-{
-	LoadBoard(brd);
-	return *this;
-}
+		bbPieceBoards[KING_W+7*iColor]		=REMOVE_PIECE(bbPieceBoards[KING_W+7*iColor],3+iColor*56);
+		bbPieceBoards[WHITE_PIECES+7*iColor]=REMOVE_PIECE(bbPieceBoards[WHITE_PIECES+7*iColor],3+iColor*56);
+		bbPieceBoards[ROOKS_W+7*iColor]		=REMOVE_PIECE(bbPieceBoards[ROOKS_W+7*iColor],iColor*56);
+		bbPieceBoards[WHITE_PIECES+7*iColor]=REMOVE_PIECE(bbPieceBoards[WHITE_PIECES+7*iColor],iColor*56);
 
+		bbPieceBoards[KING_W+7*iColor]		=PLACE_PIECE(bbPieceBoards[KING_W+7*iColor],1+iColor*56);
+		bbPieceBoards[WHITE_PIECES+7*iColor]=PLACE_PIECE(bbPieceBoards[WHITE_PIECES+7*iColor],1+iColor*56);
+		bbPieceBoards[ROOKS_W+7*iColor]		=PLACE_PIECE(bbPieceBoards[ROOKS_W+7*iColor],2+iColor*56);
+		bbPieceBoards[WHITE_PIECES+7*iColor]=PLACE_PIECE(bbPieceBoards[WHITE_PIECES+7*iColor],2+iColor*56);
 
-// end of Board class
-///////////////////////////////////////////////////////////////
+		ullBoardZKey^=zobristPieces[KING_W+7*iColor][3+iColor*56];
+		ullBoardZKey^=zobristPieces[ROOKS_W+7*iColor][iColor*56];
 
+		ullBoardZKey^=zobristPieces[KING_W+7*iColor][1+iColor*56];
+		ullBoardZKey^=zobristPieces[ROOKS_W+7*iColor][2+iColor*56];
+	}
+	else if(IsQSCastle(mv->iFlags)) // apply queen side castle
+	{
+		REVOKE_CASTLING(chCastlingRights,iColor);
 
-///////////////////////////////////////////////////////////////
-// bit manipulation functions
+		bbPieceBoards[KING_W+7*iColor]		=REMOVE_PIECE(bbPieceBoards[KING_W+7*iColor],3+iColor*56);
+		bbPieceBoards[WHITE_PIECES+7*iColor]=REMOVE_PIECE(bbPieceBoards[WHITE_PIECES+7*iColor],3+iColor*56);
+		bbPieceBoards[ROOKS_W+7*iColor]		=REMOVE_PIECE(bbPieceBoards[ROOKS_W+7*iColor],7+iColor*56);
+		bbPieceBoards[WHITE_PIECES+7*iColor]=REMOVE_PIECE(bbPieceBoards[WHITE_PIECES+7*iColor],7+iColor*56);
 
-/// Returns the index of the Least Semnificative Bit.
-/// Returns 64 in case of failure!
-int LSB(const ull b)
-{
-#ifdef USE_ASM
-	int ra, rb, rc;
-	#ifdef _MSC_VER
-		__asm {
-			xor eax, eax
-			bsf eax, dword ptr b
-			jnz end
-			bsf eax, dword ptr b+4
-			jz fail
-			add eax, 32d
-			jmp end
-			fail: mov eax,64
-			end:
+		bbPieceBoards[KING_W+7*iColor]		=PLACE_PIECE(bbPieceBoards[KING_W+7*iColor],5+iColor*56);
+		bbPieceBoards[WHITE_PIECES+7*iColor]=PLACE_PIECE(bbPieceBoards[WHITE_PIECES+7*iColor],5+iColor*56);
+		bbPieceBoards[ROOKS_W+7*iColor]		=PLACE_PIECE(bbPieceBoards[ROOKS_W+7*iColor],4+iColor*56);
+		bbPieceBoards[WHITE_PIECES+7*iColor]=PLACE_PIECE(bbPieceBoards[WHITE_PIECES+7*iColor],4+iColor*56);
+
+		ullBoardZKey^=zobristPieces[KING_W+7*iColor][3+iColor*56];
+		ullBoardZKey^=zobristPieces[ROOKS_W+7*iColor][7+iColor*56];
+
+		ullBoardZKey^=zobristPieces[KING_W+7*iColor][5+iColor*56];
+		ullBoardZKey^=zobristPieces[ROOKS_W+7*iColor][4+iColor*56];
+	}
+	else
+	{
+		if(iType==KING) REVOKE_CASTLING(chCastlingRights,iColor); // if king moved revoke all castling
+		else if(iType==ROOK)	// else if a rook moved revoke castling based on rook type ( K or Q rook )
+		{
+			if(mv->iSrc==iColor*56) REVOKE_KING_CASTLING(chCastlingRights,iColor);
+			else if(mv->iSrc==(7+iColor*56)) REVOKE_QUEEN_CASTLING(chCastlingRights,iColor);
 		}
-	#else
-		asm(
-			"   bsf	 %2, %0"	 "\n\t" 
-			"   jnz	 2f"		 "\n\t" 
-			"   bsf	 %1, %0"	 "\n\t" 
-			"   jnz	 1f"		 "\n\t" 
-			"   movl	$64, %0"	"\n\t" 
-			"   jmp	 2f"		 "\n\t" 
-			"1: addl	$32,%0"	 "\n\t" 
-			"2:"
-			:   "=&q"(ra), "=&q"(rb), "=&q"(rc)
-			:   "1"((int) (b >> 32)), "2"((int) b)
-			:   "cc"
-		);
-		return ra;
-	#endif
-#else
-	if (b) {
-		return LookupBit[((b&(-b)) * 0x7EDD5E59A4E28C2ULL) >> 58];
-	}
-	return 64;
-#endif
-}
+		else if(iType==PAWN) ullPawnZKey^=zobristPieces[13][mv->iSrc];
 
-/// Returns the index of the Most Semnificative Bit.
-/// Returns 64 in case of failure!
-int MSB(const ull b)
-{
-	int ra, rb, rc;
-#ifdef _MSC_VER
-	__asm {
-		xor eax, eax
-		bsr eax, dword ptr b
-		jnz end
-		bsr eax, dword ptr b+4
-		jz fail
-		add eax, 32d
-		jmp end
-		fail: mov eax,64
-		end:
+		bbPieceBoards[WHITE_PIECES+7*iColor]=REMOVE_PIECE(bbPieceBoards[WHITE_PIECES+7*iColor],mv->iSrc);
+		bbPieceBoards[WHITE_PIECES+7*iColor]=PLACE_PIECE(bbPieceBoards[WHITE_PIECES+7*iColor],mv->iDest);
+
+		bbPieceBoards[iType+7*iColor]=REMOVE_PIECE(bbPieceBoards[iType+7*iColor],mv->iSrc);
+		ullBoardZKey^=zobristPieces[iType+7*iColor][mv->iSrc];
+		
+		if(IsPromotion(mv->iFlags))
+		{
+			bbPieceBoards[PAWN+7*iColor]=REMOVE_PIECE(bbPieceBoards[PAWN+7*iColor],mv->iDest);
+			bbPieceBoards[QUEEN+7*iColor]=PLACE_PIECE(bbPieceBoards[QUEEN+7*iColor],mv->iDest);
+
+			//ullBoardZKey^=zobristPieces[PAWN+7*iColor][mv->iDest];
+			//ullPawnZKey^=zobristPieces[PAWN+7*iColor][mv->iDest];
+			ullBoardZKey^=zobristPieces[QUEEN+7*iColor][mv->iDest];
+		}
+		else
+		{
+			bbPieceBoards[iType+7*iColor]=PLACE_PIECE(bbPieceBoards[iType+7*iColor],mv->iDest);
+			ullBoardZKey^=zobristPieces[iType+7*iColor][mv->iDest];
+			if(iType==PAWN) ullPawnZKey^=zobristPieces[13][mv->iDest];
+		}
+
+		if(IsEnPassant(mv->iFlags)) // it's en passant type capture
+		{
+			const int iOffset=(iColor?8:(-8));
+			bbPieceBoards[WHITE_PIECES+7*(!iColor)]	=REMOVE_PIECE(bbPieceBoards[WHITE_PIECES+7*(!iColor)],mv->iDest+iOffset);
+			bbPieceBoards[PAWN+7*(!iColor)]			=REMOVE_PIECE(bbPieceBoards[PAWN+7*(!iColor)],mv->iDest+iOffset);
+
+			ullBoardZKey^=zobristPieces[PAWN+7*(!iColor)][mv->iDest+iOffset];
+			ullPawnZKey^=zobristPieces[13][mv->iDest+iOffset];
+		}
+		else if(IsCapture(mv->iFlags)) // it's a normal capture
+		{
+			const int iTypeEnemy=LSBi(REMOVE_PIECE(mv->iType,LSBi(mv->iType)))-7;
+			bbPieceBoards[WHITE_PIECES+7*(!iColor)]	=REMOVE_PIECE(bbPieceBoards[WHITE_PIECES+7*(!iColor)],mv->iDest);
+			bbPieceBoards[iTypeEnemy+7*(!iColor)]	=REMOVE_PIECE(bbPieceBoards[iTypeEnemy+7*(!iColor)],mv->iDest);
+
+			ullBoardZKey^=zobristPieces[iTypeEnemy+7*(!iColor)][mv->iDest];
+			if(iTypeEnemy==PAWN) ullPawnZKey^=zobristPieces[13][mv->iDest];
+		}
+		else if(IsPawn2SqMove(mv->iFlags)) 
+		{
+			shEnPassant=0; // all en passant rights are forfeit against the enemy
+			SET_BIT(shEnPassant,(COL(mv->iDest)+8*iColor)); //is en passant passible
+		}
+
+		//CLEAR_BITS(shEnPassant,(0xFF<<(8*iColor)));
 	}
-#else
-	asm(
-		"   bsr	 %1, %0"	 "\n\t"
-		"   jnz	 1f"		 "\n\t" 
-		"   bsr	 %2, %0"	 "\n\t" 
-		"   jnz	 2f"		 "\n\t" 
-		"   movl	$64, %0"	"\n\t" 
-		"   jmp	 2f"		 "\n\t" 
-		"1: addl	$32,%0"	 "\n\t" 
-		"2:"
-		:   "=&q"(ra), "=&q"(rb), "=&q"(rc)
-		:   "1"((int) (b >> 32)), "2"((int) b)
-		:   "cc"
-	);
-	return ra;
-#endif
 }

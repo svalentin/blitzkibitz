@@ -1,150 +1,131 @@
-#include "xboard.h"
+#include"warnings.h"
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#include<time.h>
+#include<vector>
+#include<algorithm>
+#include"bitboards.h"
+#include"board.h"
+#include"moves.h"
+#include"timecontrol.h"
+#include"evaluate.h"
+#include"search.h"
+#include"xboard.h"
 
-void XPlay(Board &board)
+bool bRandom,bPost;
+int iColor;
+int iFirstNMoves;
+int iTimeAvailable;
+int iTimeMode;
+int iTimeLeft,iOTimeLeft;
+
+void xboard(Board * const GameBoard)
 {
-	int opponent = 0;
-	char cbuffer[128], cbuff[128];
-	string buffer;
-	Openings Op;
-	Op.InitOpenings("openings.bk");
-	
-	FILE *logf = fopen("BlitzKibitz-xboard.log", "wt");
-	FILE *loga = fopen("BlitzKibitz-oponent.log", "wt");
-	setvbuf(logf, 0, _IONBF, 0);
-	setvbuf(loga, 0, _IONBF, 0);
-	
-	// disable buffer use
+	char sInput[256]={0},sOutput[256]={0},aux[256]={0};
+	int pingN=0,i,score,start=0,iNumMoves=0;
+	Move mvEnemy,mv,mvBestMove;
+	FILE *logxb = fopen("Amaterasu_xboard.log", "w");
+	setvbuf(logxb, 0, _IONBF, 0);
 	setvbuf(stdin, 0, _IONBF, 0);
 	setvbuf(stdout, 0, _IONBF, 0);
 
-	fprintf(logf, "buffers set to 0\n");
-	int startMoves = 0;
-	int moveNr = 1;
-	printf("Begin\n");
-	while (1) {
-		Move m;
-		
-		if (board.player == opponent || opponent == -1) {
-			fgets(cbuffer, 128, stdin); cbuffer[strlen(cbuffer)-1] = 0;
-			buffer = cbuffer;
-			fprintf(logf, "%s\n", cbuffer);
-			
-			m.flags = 0;
-			m = DecodeACN(cbuffer, board);
-//			fprintf(logf, "DecodeACN finished with m.flags=%d\n", m.flags);
-			if (m.check == MATE) {
-				printf("resign\n");
+	g_TimeControl.SetAllocatedTime(7.4f);
+	do
+	{
+		memset(sInput,0,50);
+		if(fgets(sInput,256, stdin))
+		{
+			fprintf(logxb,"%s\n",sInput);
+			if(DecodeMove(sInput,GameBoard,!iColor,&mvEnemy)==-1 || mvEnemy.iSrc==-1) // it's a winboard command
+			{
+				if(strcmp(sInput,"go\n")==0)
+				{
+					start=1;
+					goto start_game; // yes the infamous goto...makes things a lot easier sometimes
+				}
+				if(strcmp(sInput,"force\n")==0)
+				{
+					iNumMoves=start=0;
+					InitChessboard(GameBoard);
+				}
+				else if(strncmp(sInput,"level ",6)==0)
+				{
+					sscanf(sInput,"level %d %d %d\n",&iFirstNMoves,&iTimeAvailable,&iTimeMode);
+					sprintf(sOutput,"level %d %d %d\n",iFirstNMoves,iTimeAvailable,iTimeMode);
+					fprintf(logxb,"%s",sOutput);
+				}
+				else if(strncmp(sInput,"ping",4)==0)
+				{
+					sscanf(sInput,"ping %d\n",&pingN);
+					sprintf(sOutput,"pong %d\n",pingN);
+					puts(sOutput);
+				}
+				else if(strcmp(sInput,"xboard\n")==0)
+				{
+					puts("feature ping=1 san=1\n");
+					fprintf(logxb,"feature ping=1 san=1\n");
+				}
+				else if(strcmp(sInput,"new\n")==0)
+				{
+					iColor=BLACK;
+				}
+				else if(strcmp(sInput,"random\n")==0)	bRandom=true;
+				else if(strcmp(sInput,"post\n")==0)		bPost=true;
+				else if(strcmp(sInput,"nopost\n")==0)	bPost=false;
+				else if(strcmp(sInput,"white\n")==0)
+				{
+					start=1;
+					iColor=WHITE;
+				}
+				else if(strcmp(sInput,"black\n")==0)
+				{
+					start=1;
+					iColor=BLACK;
+				}
+				else if(strcmp(sInput,"quit\n")==0) break;
 			}
-			else if (m.flags & ERROR) {
-				fprintf(logf, "%s\n", buffer.c_str());
-				if (buffer == "quit") {
-					fgets(cbuffer, 128, stdin); // make sure there is nothing more to get
-					break;
-				}
-				else if (buffer == "new") {
-					// new game
-					// TODO: test it some more!
-					board.InitChessboard();
-					opponent = 0;
-				}
-				else if (buffer == "xboard") {
-					// ok..
-				}
-				else if (buffer == "force") {
-					opponent = -1;
-				}
-				else if (buffer == "go") {
-					//opponent = !board.player;
-				}
-				else if (buffer == "white") {
-					opponent = 1;
-				}
-				else if (buffer == "black") {
-					opponent = 0;
-				}
-				else if (buffer == "go") {
-					opponent = !board.player;
-				}
-				// make sure we don't consider valid xboard commands as errors
-				else if (buffer.find("accepted")!=-1 || buffer.find("random")!=-1) {
-				}
-				else if (buffer.find("level")!=-1 || buffer.find("hard")!=-1) {
-				}
-				else if (buffer.find("time")!=-1 || buffer.find("otim")!=-1) {
-				}
-				else {
-					fprintf(logf, "eroare :|\n");
-					board.PrintBoard(logf);
-					fflush(logf);
-				}
-			}
-			else {
-				fprintf(loga, "%s\n", cbuffer);
-				fflush(loga);
-			}
-		}
-		else {
-			fprintf(logf, "-->My turn!\n");
-			moveNr += 2;
-			m = Op.GetMoveFromDB(board);
-			if (m.flags == ERROR) {
-				int score=0;
-				if (board.GetPieceCount() < 11) {
-					DEPTH_LIMIT = 8;
-					if (board.GetPieceCount() < 7)
-						DEPTH_LIMIT = 9;
-					MAX_DEPTH = 7;
-					fprintf(logf, "Playing at %d plies, limit %d\n", MAX_DEPTH, DEPTH_LIMIT);
-				}
-				if (startMoves < 4) {
-					startMoves++;
-					MAX_DEPTH++;
-					score = IDDFS(board, moveNr, MAX_DEPTH);
-					MAX_DEPTH--;
-				}
-				else {
-					score = IDDFS(board, moveNr, MAX_DEPTH);
-				}
-				m = BestMove;
-				fprintf(logf, "Move #%d\n", moveNr);
-				fprintf(logf, "BestMove has score %d\n", score);
-			}
-			else {
-				fprintf(logf, "Move #%d found in DB!\n", moveNr);
-			}
-			
-			if (m.flags & DRAW) {
-				// I can't make any move
-				printf("1/2-1/2 {Stalemate}");
-				fprintf(logf, "Stalemate\n");
-				board.player = !board.player;
-			}
-			else {
-				string enc = EncodeACN(m, board);
-				fprintf(logf, "%s\n", enc.c_str());
-				printf("move %s\n", enc.c_str());
-				
-				if (m.check == MATE) {
-					printf("checkmate");
-					board.MakeMove(m);
-					board.player = !board.player;
-					board.PrintBoard(logf);
-				}
-			}
-		}
-		
-		if (!((m.flags & ERROR) || m.check == MATE || (m.flags & DRAW))) {
-			board.MakeMove(m);
-			board.player = !board.player;
-			board.PrintBoard(logf);
-			fprintf(logf, "Current board has score %d\n", CalculateScore(board));
-			fprintf(logf, "FEN: %s\n", toFEN(board));
-			fprintf(logf, "Total hash hits: %d\n", hits);
-			fprintf(logf, "Total hash hits with depth diffference >=2 : %d\n", hd2);
-			fprintf(logf, "Total hash hits with depth diffference >=3 : %d\n", hd3);
-		}
+			else // it's a move
+			{
+				fprintf(logxb,"received move  %s\n",sInput);
+				GameBoard->MakeMove(&mvEnemy);
+				PrintBoard(GameBoard,logxb);
 
-		fprintf(logf, "\n");
-	}
-	fprintf(logf, "I'm done!\n");
+				if(start)
+				{
+					start_game: // we jump here when we receive the "go" command from winboard
+					g_TimeControl.SetStartTime();
+					for(i=4;i<=MAX_DEPTH;i++)
+					{
+						fprintf(logxb,"Start search at depth %d\n",i);
+						iMaxDepth=i;
+						score=RootNode(GameBoard,iColor,&mv);
+						if(g_TimeControl.GetStatus()) break;	// time ran out during last search
+						else mvBestMove=mv;
+
+						int iAuxCol=!iColor;
+						EncodeMove(GameBoard,&g_PVLine[0],iColor,aux);
+						sprintf(sOutput,"%d %d %d %lld %s ",i,score,(int)(g_TimeControl.GetElapsedTime()*100),ullNodesSearched,aux);
+						for(int j=1;j<=i;j++)
+						{
+							EncodeMove(GameBoard,&g_PVLine[j],iAuxCol,aux);
+							sprintf(sOutput,"%s %s ",sOutput,aux);
+							iAuxCol=!iAuxCol;
+						}
+						sprintf(sOutput,"%s\n",sOutput);
+						puts(sOutput);
+						mvBestMove=mv;
+					}
+
+					GameBoard->MakeMove(&mvBestMove);
+					char mstr[100];
+					EncodeMove(GameBoard,&mvBestMove,iColor,mstr);
+					sprintf(sOutput,"move %s",mstr);
+					puts(sOutput);
+					fprintf(logxb,"%s\n",mstr);
+					iNumMoves++;
+				}
+			}
+		}
+	}while(1);
 }

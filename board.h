@@ -1,109 +1,68 @@
-#ifndef BOARD_H_
-#define BOARD_H_
+#ifndef _BOARD_H_
+#define _BOARD_H_
 
-#include "pieces.h"
-#include "magic.h"
+#define INITIAL_POS_PAWNS_W			0x000000000000FF00LL
+#define INITIAL_POS_PAWNS_B			(INITIAL_POS_PAWNS_W<<40)
+#define INITIAL_POS_KNIGHTS_W		0x42LL
+#define	INITIAL_POS_KNIGHTS_B		(INITIAL_POS_KNIGHTS_W<<56)
+#define INITIAL_POS_BISHOPS_W		0x24LL
+#define INITIAL_POS_BISHOPS_B		(INITIAL_POS_BISHOPS_W<<56)
+#define INITIAL_POS_ROOKS_W			0x81LL
+#define INITIAL_POS_ROOKS_B			(INITIAL_POS_ROOKS_W<<56)
+#define INITIAL_POS_QUEEN_W			0x10LL
+#define INITIAL_POS_QUEEN_B			(INITIAL_POS_QUEEN_W<<56)
+#define INITIAL_POS_KING_W			0x8LL
+#define INITIAL_POS_KING_B			(INITIAL_POS_KING_W<<56)
+#define INITIAL_POS_WHITE_PIECES	(INITIAL_POS_PAWNS_W|INITIAL_POS_KNIGHTS_W|INITIAL_POS_BISHOPS_W|INITIAL_POS_ROOKS_W|INITIAL_POS_QUEEN_W|INITIAL_POS_KING_W)
+#define INITIAL_POS_BLACK_PIECES	((INITIAL_POS_PAWNS_W|INITIAL_POS_KNIGHTS_W|INITIAL_POS_BISHOPS_W|INITIAL_POS_ROOKS_W|INITIAL_POS_QUEEN_W|INITIAL_POS_KING_W)<<48)
 
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <cctype>
+#define SQUARE_FREE(bbBoard,iIndex)						((~((U64)bbBoard))&((U64)1<<(iIndex)))
 
-#include <map>
-#include <vector>
-#include <algorithm>
-using namespace std;
+#define CHECK_ENPAS(shEnpas,iIndex,iColor)				((shEnpas)&(1<<((iIndex)+iColor*8)))
 
-//#define USE_ASM
+#define CHECK_KING_CASTLING(chCastlingRights,iColor)	(((chCastlingRights)&(0x03<<(4*iColor)))==0x00)
+#define CHECK_QUEEN_CASTLING(chCastlingRights,iColor)	(((chCastlingRights)&(0x0A<<(4*iColor)))==0x00)
 
-typedef unsigned long long ull;
+#define REVOKE_KING_CASTLING(chCastlingRights,iColor)	((chCastlingRights)|=(0x01<<(4*iColor)))
+#define REVOKE_QUEEN_CASTLING(chCastlingRights,iColor)	((chCastlingRights)|=(0x08<<(4*iColor)))
+#define REVOKE_CASTLING(chCastlingRights,iColor)		((chCastlingRights)|=(0x0F<<(4*iColor)))
 
-#define INITIAL_POS_PAWN_W		0x000000000000FF00LL
-#define INITIAL_POS_PAWN_B		(INITIAL_POS_PAWN_W<<40)
-#define INITIAL_POS_KNIGHT_W	0x42LL
-#define INITIAL_POS_KNIGHT_B	(INITIAL_POS_KNIGHT_W<<56)
-#define INITIAL_POS_BISHOP_W	0x24LL
-#define INITIAL_POS_BISHOP_B	(INITIAL_POS_BISHOP_W<<56)
-#define INITIAL_POS_ROOK_W		0x81LL
-#define INITIAL_POS_ROOK_B		(INITIAL_POS_ROOK_W<<56)
-#define INITIAL_POS_QUEEN_W		0x10LL
-#define INITIAL_POS_QUEEN_B		(INITIAL_POS_QUEEN_W<<56)
-#define INITIAL_POS_KING_W		0x8LL
-#define INITIAL_POS_KING_B		(INITIAL_POS_KING_W<<56)
-
-#define INITIAL_POS_WHITE_PIECES  \
-	(INITIAL_POS_PAWN_W | INITIAL_POS_KNIGHT_W | INITIAL_POS_BISHOP_W | \
-	 INITIAL_POS_ROOK_W | INITIAL_POS_QUEEN_W  | INITIAL_POS_KING_W)
-#define INITIAL_POS_BLACK_PIECES \
-	((INITIAL_POS_PAWN_W | INITIAL_POS_KNIGHT_W | INITIAL_POS_BISHOP_W | \
-	  INITIAL_POS_ROOK_W | INITIAL_POS_QUEEN_W  | INITIAL_POS_KING_W) << 48)
-
+#define KING_IN_CHECK(bbKing,bbEnemyAttacks)			((U64)((bbKing)&(bbEnemyAttacks)))
 
 class Move;
 
 class Board
 {
 	public:
+		U64 bbPieceBoards[14];
+		U64 ullBoardZKey;
+		U64 ullPawnZKey;
+		unsigned short shEnPassant;
+		unsigned char chCastlingRights;
+		// first 16 bits en pessant rights in white/black order
+		// next 4 bits castling rights in white-black/king-queen-side order
 
-	ull bb[14];
-	int player;
-	short int enPassant;
-	int check;
-	unsigned char castling;
-	// bit1 : rocada pe partea regelui pt alb
-	// bit2 : rocada pe partea reginei pt alb
-	// bit3 : rocada pe partea regelui pt negru
-	// bit4 : rocada pe partea reginei pt negru
-	
-	void InitChessboard();
-	void PrintBoard(FILE *fout = stdout) const;
-	void PrintBitBoard(const ull bitboard) const;
-	int GetPieceType(const int pos) const;
-	int GetPieceCount() const;
-	int MakeMove(const Move mv);
-	vector<Move> GetMoves() const;
-	ull GetOccupancy() const;
-	int WeGiveCheckOrMate(const Move mv) const;
-	const bool VerifyChess(const ull pos, const int side) const;
-	void SaveBoard(Board &brd) const;
-	void LoadBoard(const Board &brd);
-	
-	Board& operator=(const Board &brd);
-	
-	private:
-	
-	void applyCastling(pair<int, int>, pair<int, int>);
-	const bool appendMoves(vector<Move> &m, ull att, const int piece, const int source) const;
-	const bool validCastling(const int side) const;
+		const int GetPieceType(const int pos) const;
+		const int GetPieceCount() const;
+		const U64 GetOccupancy() const;
+		const U64 GetAttackBoard(const int iColor) const;
+		const U64 GetSideOccupancy(const int iColor) const;
+		const U64 GetPieceBoard(const int iType,const int iColor) const;
+
+		const U64 GetBoardZKey(const int iColor) const;
+		const U64 GetPawnZKey() const;
+
+		const void AppendMoves(std::vector<Move>& vMoves,U64 bbMoveBoard,const int iType,const int iSrc,const int iColor) const;
+		const void AppendPawnNormalMoves(std::vector<Move>&vMoves,U64 bbMoveBoard,const int iSrc,const int iColor) const;
+		const void AppendPawnAttackMoves(std::vector<Move>&vMoves,U64 bbMoveBoard,const int iSrc,const int iColor) const;
+
+		const std::vector<Move> GetMoves(const int iColor) const;
+
+		const void MakeMove(Move const * const mv);
 };
 
-
-///////////////////////////////////////////////////////////////
-// bitwise macros and procedures
-// procedures for Least Semnificative Bit & Most Semnificative Bit
-// LSBb returns a uul with only the LSB set
-
-#define CLEAR_BIT_UCHAR(x, index) ((x) &= ~((unsigned char) 1 << ((unsigned char) index)))
-
-#define CLEAR_BIT(bb, index)	((bb) &= ~((ull) 1 << ((ull) index)))
-#define SET_BIT(bb, index)		((bb) |= ((ull) 1 << ((ull) index)))
-
-#define IS_SET_BIT(bb, index)	((bb) & ((ull) 1 << ((ull) index)))
-
-#define LSBb(x) (((x)^((x)-1)) & (x))
-int LSB(const ull b);
-int MSB(const ull b);
-
-// bit functions used for iterating through bits
-
-// NOTE:
-// if all bits are 0, LSB/MSB returns 64 and CLEAR_BIT sets an existing 0 bit to 0.
-// 1<<64 couses overflow, but who cares?
-inline int LSBi(ull &b) {int ret = LSB(b); if (ret!=64) CLEAR_BIT(b, ret); return ret;}
-inline int MSBi(ull &b) {int ret = MSB(b); if (ret!=64) CLEAR_BIT(b, ret); return ret;}
-
-// conversie coordonate linie+coloana <--> index bitboard
-inline ull COORDS_TO_INDEX(const int x, const int y) {return ((x) << 3) + (y);}
-inline pair<int, int> INDEX_TO_COORDS(const ull pos) {return make_pair(pos/8, pos%8);}
+void InitChessboard(Board*board);
+void PrintBoard(Board*board,FILE *fout = stdout);
+void PrintBitBoard(const U64 bitboard,FILE *fout = stdout);
 
 #endif

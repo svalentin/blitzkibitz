@@ -1,13 +1,6 @@
-#ifndef XBOARD_H_
-#define XBOARD_H_
+#ifndef _XBOARD_H_
+#define _XBOARD_H_
 
-#include "board.h"
-#include "magic.h"
-#include "pieces.h"
-#include "opendb.h"
-#include "engine.h"
-#include "acn.h"
-
-void XPlay(Board &board);
+void xboard(Board * const GameBoard);
 
 #endif

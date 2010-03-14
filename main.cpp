@@ -1,144 +1,139 @@
-#include <cstdio>
-#include <cstdlib> 
-#include <vector>
-#include <algorithm>
+#include"warnings.h"
+#include<stdio.h>
+#include<stdlib.h>
+#include<time.h>
+#include<vector>
+#include<algorithm>
+#include"random.h"
+#include"constants.h"
+#include"bitboards.h"
+#include"magic.h"
+#include"moves.h"
+#include"board.h"
+#include"hash.h"
+#include"evaluate.h"
+#include"timecontrol.h"
+#include"search.h"
+#include"xboard.h"
+#include"util.h"
 using namespace std;
 
-#include "board.h"
-#include "magic.h"
-#include "pieces.h"
-#include "opendb.h"
-#include "evaluation.h"
-#include "engine.h"
-#include "acn.h"
-#include "xboard.h"
+int PieceValue[6]={100,300,300,500,900,32000};
+int ColorScore[2]={1,-1};
 
-void clrscr(void)
+U64 ullNodesSearched;
+TCtrl g_TimeControl;
+
+
+int main(int argn,char**args)
 {
-#ifndef __linux__
-	system("CLS");
-#else
-	system("clear");
-#endif
-}
+	int iCol=WHITE;
+	char str[100]={0};
+	Board GameBoard={0};
+	Move mv1,mv2,mv;
 
-void terminal_or_xboard()
-{
-	Board board;
-	board.InitChessboard();
-
-	int opponent = 0;
-	char com[128];
-	
-	printf("Choose a color (0 - white, 1 - black)\n"); // '\n' must exist for xboard
-	gets(com);
-	
-	// if we don't recieve a color, then turn to xboard mode!
-	if (!sscanf(com, "%d", &opponent)) {
-		printf("feature san=1\n");
-		printf("feature sigint=0\n");
-		printf("feature sigterm=0\n");
-		printf("feature name=0\n");
-		printf("feature time=0\n");
-		printf("feature draw=0\n");
-		printf("feature reuse=0\n");
-		printf("feature analyze=0\n");
-		printf("feature myname=\"BlitzKibitz\"\n");
-		printf("feature done=1\n");
-		XPlay(board);
-		return;
-	}
-	
-	printf("Enter the move in ACN format:\n");
-	printf("You can exit the program with \"quit\"\n");
-	board.PrintBoard();
-	
-	Openings Op;
-	Op.InitOpenings("openings.bk");
-
-	int moveNr = 1;
-	int startMoves = 0;
-	int score = 0;
-	while (board.check != MATE) {
-		Move m;
-		
-		if (board.player == opponent) {
-			gets(com);
-			
-			if (strcmp(com, "quit") == 0) break;
-			if (strcmp(com, "q") == 0) break;
-			
-			m.flags = 0;
-			m = DecodeACN(com, board);
-			clrscr();
-		}
-		else {
-			moveNr += 2;
-			m = Op.GetMoveFromDB(board);
-			if (m.flags != ERROR) {
-#ifdef DEBUG
-				printf("Mutarea a fost gasita in baza de date\n");
-				printf("%c%d -> %c%d\n", 'h'-m.source%8, m.source/8+1, 'h'-m.destination%8, m.destination/8+1);
-#endif
-			}
-			else {
-				int tstart=clock();
-				if (board.GetPieceCount() < 11) {
-					DEPTH_LIMIT = 8;
-					if (board.GetPieceCount() < 7)
-						DEPTH_LIMIT = 9;
-					MAX_DEPTH = 7;
-				}
-				if (startMoves < 4) {
-					startMoves++;
-					MAX_DEPTH++;
-					//score = AlphaBeta(board, moveNr, MAX_DEPTH);
-					score = IDDFS(board, moveNr, MAX_DEPTH);
-					MAX_DEPTH--;
-				}
-				else {
-					//vector<Move> moves;
-					//score = NegaMaxD(moves, moveNr, board, 0);
-					//score = NegaMax(board, moveNr);
-					//score = AlphaBeta(board, moveNr, MAX_DEPTH);
-					score = IDDFS(board, moveNr, MAX_DEPTH);
-					//score = AlphaBetaD(moves, moveNr, board);
-				}
-				printf("BestMove has score %d - calc in %.3fs\n", score,(double)(clock() - tstart) / CLOCKS_PER_SEC);
-				m = BestMove;
-				//for (int i=0; i<moves.size(); ++i)
-				//	printf("%c%d -> %c%d\n", 'h'-moves[i].source%8, moves[i].source/8+1, 'h'-moves[i].destination%8, moves[i].destination/8+1);
-			}
-
-			string enc = EncodeACN(m, board);
-			printf("move %s\n", enc.c_str());
-		}
-		
-		if (strcmp(com, "quit") == 0) break;
-		if (strcmp(com, "q") == 0) break;
-		
-
-		if (!(m.flags & ERROR)) {
-			board.MakeMove(m);
-			board.player = !board.player;
-		}
-		
-		board.PrintBoard();
-	}
-
-}
-
-int main(int argc, char* argv[])
-{
-#ifndef NORAND
-	srand(time(NULL));
-#endif
-
-	initmagicmoves();
-	initPieces();
+	InitRandGenByArray();
 	InitHash();
-	
-	terminal_or_xboard();
+	InitMagicMoves();
+	InitChessboard(&GameBoard);
 
+	xboard(&GameBoard);
+	//LoadProblem(&GameBoard,"mate5_6.txt");
+	PrintBoard(&GameBoard);
+	
+	int src=33,i=0,score=0,start=1;
+	vector<Move> vM;
+
+	g_TimeControl.SetAllocatedTime(20.5f);
+	do
+	{
+		getchar();
+		printf("Start thinking as %s\n",iCol?"Black":"White");
+
+		int i;
+		Move mvBestMove;
+		g_TimeControl.SetStartTime();
+		printf("Time status %d\n",g_TimeControl.GetStatus());
+		for(i=4;i<=MAX_DEPTH;i++)
+		{
+			iMaxDepth=i;
+			score=RootNode(&GameBoard,iCol,&mv);
+			if(g_TimeControl.GetStatus()) break;	// time ran out during last search
+			else 
+			mvBestMove=mv;
+		}
+		if(g_TimeControl.GetStatus())
+		{
+			printf("Time ran out during search at ply %d\nReverting to search results at ply %d\n",i,i-1);
+		}
+		printf("Done thinking\nTime %f\nNodes searched %lld\n",g_TimeControl.GetElapsedTime(),ullNodesSearched);
+		char mstr[100]={0};
+
+		EncodeMove(&GameBoard,&mvBestMove,iCol,mstr);
+
+		printf("\nMove %s scored %d\n",mstr,score);
+		GameBoard.MakeMove(&mvBestMove);
+		PrintBoard(&GameBoard);
+		mv.iDest=mv.iSrc=mv.iFlags=mv.iType=0;
+		iCol=!iCol;
+	}while(1);
+
+	
+	getchar();
+
+	printf("Begin Game\n");
+	do
+	{
+		//scanf("%s",str);
+		fgets(str,100,stdin);
+		if(strcmp(str,"quit")==0) break;
+		DecodeMove(str,&GameBoard,iCol,&mv);
+		PrintMoveInfo(mv);
+		getchar();
+		getchar();
+		GameBoard.MakeMove(&mv);
+		clrscr();
+		PrintBoard(&GameBoard);
+		printf("Start thinking\n");
+		Move mvBestMove;
+		/*if(start==1) 
+		{
+			strcpy(str,"e5");
+			DecodeMove(str,&GameBoard,!iCol,&mv);
+			start=0;
+		}
+		else*/
+		{
+			g_TimeControl.SetStartTime();
+			int i;
+			for(i=4;i<=MAX_DEPTH;i++)
+			{
+				iMaxDepth=i;
+				score=RootNode(&GameBoard,!iCol,&mv);
+				if(g_TimeControl.GetStatus()) break;	// time ran out during last search
+				else 
+					mvBestMove=mv;
+			}
+			if(g_TimeControl.GetStatus())
+			{
+				printf("Time ran out during search at ply %d\nReverting to search results at ply %d\n",i,i-1);
+			}
+		}
+		printf("Done thinking\nTime %f\nNodes searched %lld\n",g_TimeControl.GetElapsedTime(),ullNodesSearched);
+		if(score>LOSS)
+		{
+			char mstr[100];
+			EncodeMove(&GameBoard,&mvBestMove,!iCol,mstr);
+			printf("\nMove %s scored %d\nPress any key...\n",mstr,score);
+			getchar();
+			GameBoard.MakeMove(&mv);
+			clrscr();
+			PrintBoard(&GameBoard);
+		}
+	}while(1);
+
+	PrintBitBoard( Nmagic(44) );
+	//printf("%d",59>>3);
+	getchar();
 	return 0;
 }
