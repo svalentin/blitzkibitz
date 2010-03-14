@@ -4,18 +4,6 @@ HElem HTable[HASH_SIZE];
 
 ull zobristPieces[14][64], zobristPlayer, zobristCastling[4], zobristEnPassant[64];
 
-// Get a random 64-bit number
-ull GetRand64()
-{
-	static int i=256, cnt=0;
-	if (i>254) {
-		randinit(cnt++);
-		isaac();
-		i=0;
-	}
-	return (((ull) randrsl[i++] << 32ULL) | ((ull) randrsl[i++]));
-}
-
 // Initialize the hashing numbers and other hash initialization stuff
 void InitHash()
 {
@@ -29,7 +17,7 @@ void InitHash()
 		zobristEnPassant[i] = GetRand64();
 }
 
-// Calculat a Zorbist Key from a given board
+// Calculate a Zorbist Key from a given board
 // should not be used very often
 // the key should be maintained in the Board class with MakeMove
 ull GetZobristKey(const Board &board)

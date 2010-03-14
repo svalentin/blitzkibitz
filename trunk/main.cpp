@@ -104,7 +104,7 @@ void terminal_or_xboard()
 					score = IDDFS(board, moveNr, MAX_DEPTH);
 					//score = AlphaBetaD(moves, moveNr, board);
 				}
-				printf("BestMove has score %d - calc in %f\n", score,(double)(clock() - tstart) / CLOCKS_PER_SEC);
+				printf("BestMove has score %d - calc in %.3fs\n", score,(double)(clock() - tstart) / CLOCKS_PER_SEC);
 				m = BestMove;
 				//for (int i=0; i<moves.size(); ++i)
 				//	printf("%c%d -> %c%d\n", 'h'-moves[i].source%8, moves[i].source/8+1, 'h'-moves[i].destination%8, moves[i].destination/8+1);

@@ -41,8 +41,6 @@ class HElem
 
 extern HElem HTable[HASH_SIZE];
 
-
-ull GetRand64();
 void InitHash();
 ull GetZobristKey(const Board &board);
 ull GetPawnZobristKey(const Board &board);
