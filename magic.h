@@ -1,6 +1,23 @@
 #ifndef _MAGIC_H_
 #define _MAGIC_H_
 
+#define USE_FORCE_INLINE
+#ifdef _MSC_VER
+	#define _CRT_SECURE_NO_WARNINGS
+#endif
+
+#ifdef USE_FORCE_INLINE
+	#ifdef _MSC_VER
+		#define _FORCE_INLINE_ __forceinline
+	#endif
+	#ifdef __GNUC__
+		#define _FORCE_INLINE_ __inline__
+	#endif
+	#ifndef _FORCE_INLINE_
+		#define _FORCE_INLINE_ inline
+	#endif
+#endif
+
 #define KSC_WHITE_MASK			((U64)0x06)
 #define KSC_BLACK_MASK			(KSC_WHITE_MASK<<56)
 #define QSC_WHITE_MASK			((U64)0x70)

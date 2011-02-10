@@ -1,5 +1,6 @@
 #include<stdio.h>
 #include<vector>
+
 #include"random.h"
 #include"constants.h"
 #include"bitboards.h"

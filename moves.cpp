@@ -1,11 +1,13 @@
-#include"warnings.h"
 #include<stdio.h>
 #include<string.h>
 #include<vector>
+
 #include"bitboards.h"
 #include"board.h"
 #include"moves.h"
 #include"magic.h"
+#include"warnings.h"
+
 using namespace std;
 
 void PrintMoveInfo(Move m,FILE*fout)

@@ -1,13 +1,16 @@
 #include<stdio.h>
 #include<string.h>
+
 #include<vector>
 #include<algorithm>
+
 #include"constants.h"
 #include"bitboards.h"
 #include"board.h"
 #include"magic.h"
 #include"moves.h"
 #include"hash.h"
+
 using namespace std;
 
 /// Function that initialises the board.

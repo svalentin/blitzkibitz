@@ -1,6 +1,8 @@
 #ifndef _MOVES_H_
 #define _MOVES_H_
 
+#include<stdio.h>
+
 #include "constants.h"
 
 class Board;

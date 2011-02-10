@@ -1,12 +1,13 @@
-#include"warnings.h"
 #include<stdio.h>
 #include<stdlib.h>
 #include<vector>
+
 #include"constants.h"
 #include"bitboards.h"
 #include"moves.h"
 #include"board.h"
 #include"util.h"
+#include"warnings.h"
 
 void clrscr(void)
 {

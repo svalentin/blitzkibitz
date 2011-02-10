@@ -1,9 +1,10 @@
-#include"warnings.h"
 #include<stdio.h>
+#include<string.h>
 #include<stdlib.h>
 #include<time.h>
 #include<vector>
 #include<algorithm>
+
 #include"random.h"
 #include"constants.h"
 #include"bitboards.h"
@@ -16,6 +17,8 @@
 #include"search.h"
 #include"xboard.h"
 #include"util.h"
+#include"warnings.h"
+
 using namespace std;
 
 int PieceValue[6]={100,300,300,500,900,32000};
