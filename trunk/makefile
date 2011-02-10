@@ -1,8 +1,11 @@
 # BlitzKibitz
 # makefile
 
+@OS = $(shell echo %OS%)
+# on Windows this is 'Windows_NT', on Unix it's empty
+
 CC = g++
-CFLAGS = -s -O3 -ffast-math -fomit-frame-pointer -msse -mfpmath=sse -Wno-deprecated -static-libgcc 
+CFLAGS = -s -O3 -ffast-math -fomit-frame-pointer -msse -mfpmath=sse -static-libgcc -Wno-deprecated -Wno-unused-result
 #CFLAGS = -g -msse -DNORAND
 
 # CFLAGS explanation
@@ -24,6 +27,9 @@ CFLAGS = -s -O3 -ffast-math -fomit-frame-pointer -msse -mfpmath=sse -Wno-depreca
 #		Needed to activate sse instructions used by `-mfpmath=sse`
 #	-ffast-math
 #		Enable unsafe math optimizations. We don't rely on ISO specifications.
+#	-static-libgcc
+#		Mingw dynamically links libgcc, we need this static so it will run everywhere
+
 
 all: main.o board.o pieces.o magic.o opendb.o engine.o acn.o xboard.o rand.o evaluation.o rand.o hash.o
 	$(CC) $(CFLAGS) -o BlitzKibitz main.o magic.o board.o pieces.o opendb.o engine.o acn.o xboard.o rand.o hash.o evaluation.o
@@ -64,6 +70,11 @@ engine.o: engine.cpp engine.h
 run: BlitzKibitz openings.bk
 	./BlitzKibitz
 
-clean: BlitzKibitz
+clean:
+ifeq ($(OS),Windows_NT)
+	del BlitzKibitz.exe
+	del *.o
+else
 	rm BlitzKibitz
 	rm *.o
+endif
