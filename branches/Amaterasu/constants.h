@@ -10,23 +10,6 @@
 	#endif
 #endif
 
-#ifdef _MSC_VER
-	#define USE_FORCE_INLINE
-	#define _CRT_SECURE_NO_WARNINGS
-#endif
-
-#ifdef USE_FORCE_INLINE /* e necesar ca altfel avem linker error */
-	#ifdef _MSC_VER
-		#define _FORCE_INLINE_ __forceinline
-	#endif
-	#ifdef __GNUC__
-		#define _FORCE_INLINE_ __inline__
-	#endif
-	#ifndef _FORCE_INLINE_
-		#define _FORCE_INLINE_ inline
-	#endif
-#endif
-
 #define WHITE 0
 #define BLACK 1
 

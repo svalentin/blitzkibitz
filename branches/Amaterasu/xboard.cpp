@@ -1,10 +1,10 @@
-#include"warnings.h"
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
 #include<time.h>
 #include<vector>
 #include<algorithm>
+
 #include"bitboards.h"
 #include"board.h"
 #include"moves.h"
@@ -12,6 +12,7 @@
 #include"evaluate.h"
 #include"search.h"
 #include"xboard.h"
+#include"warnings.h"
 
 bool bRandom,bPost;
 int iColor;

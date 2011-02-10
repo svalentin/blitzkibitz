@@ -55,4 +55,4 @@ inline HElem GetHElem(const int index)
 
 void SetHElem(const int index, const HElem elem);
 
-#endif	_HASH_H_
+#endif // _HASH_H_

@@ -1,4 +1,5 @@
 #include<stdio.h>
+
 #include"constants.h"
 #include"bitboards.h"
 

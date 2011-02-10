@@ -1,4 +1,6 @@
+#include<stdlib.h>
 #include<vector>
+
 #include"constants.h"
 #include"bitboards.h"
 #include"magic.h"
