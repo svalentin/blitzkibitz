@@ -2,7 +2,7 @@
 # makefile
 
 CC = g++
-CFLAGS = -s -O3 -ffast-math -fomit-frame-pointer -msse -mfpmath=sse -Wno-deprecated
+CFLAGS = -s -O3 -ffast-math -fomit-frame-pointer -msse -mfpmath=sse -Wno-deprecated -static-libgcc 
 #CFLAGS = -g -msse -DNORAND
 
 # CFLAGS explanation
