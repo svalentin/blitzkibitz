@@ -24,7 +24,7 @@ int iTimeLeft,iOTimeLeft;
 void xboard(Board * const GameBoard)
 {
 	char sInput[256]={0},sOutput[256]={0},aux[256]={0};
-	int pingN=0,i,score,start=0,iNumMoves=0;
+	int pingN=0,i,score,start=1,iNumMoves=0;
 	Move mvEnemy,mv,mvBestMove;
 	FILE *logxb = fopen("Amaterasu_xboard.log", "w");
 	setvbuf(logxb, 0, _IONBF, 0);
