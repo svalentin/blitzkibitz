@@ -18,7 +18,6 @@ void XPlay(int normal_max_depth, Board &board)
 	setvbuf(stdout, 0, _IONBF, 0);
 
 	fprintf(logf, "buffers set to 0\n");
-	int startMoves = 0;
 	int moveNr = 1;
   fprintf(logf, "Begin - max depth %d\n", normal_max_depth);
 	printf("Begin\n");
@@ -92,23 +91,16 @@ void XPlay(int normal_max_depth, Board &board)
 			moveNr += 2;
 			m = Op.GetMoveFromDB(board);
 			if (m.flags == ERROR) {
-				int score=0;
+				int score = 0;
+        int max_depth = normal_max_depth;
+				if (moveNr < 8) {
+          max_depth = max_depth + 1;
+				}
 				if (board.GetPieceCount() < 11) {
-					DEPTH_LIMIT = normal_max_depth+1;
-					if (board.GetPieceCount() < 7)
-						DEPTH_LIMIT = normal_max_depth+2;
-					MAX_DEPTH = normal_max_depth;
-					fprintf(logf, "Playing at %d plies, limit %d\n", MAX_DEPTH, DEPTH_LIMIT);
+					max_depth = max_depth + 1;
 				}
-				if (startMoves < 4) {
-					startMoves++;
-					MAX_DEPTH++;
-					score = IDDFS(board, moveNr, MAX_DEPTH);
-					MAX_DEPTH--;
-				}
-				else {
-					score = IDDFS(board, moveNr, MAX_DEPTH);
-				}
+				fprintf(logf, "Playing at %d plies\n", max_depth);
+        score = IDDFS(board, moveNr, max_depth);
 				m = BestMove;
 				fprintf(logf, "Move #%d\n", moveNr);
 				fprintf(logf, "BestMove has score %d\n", score);

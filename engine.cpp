@@ -4,13 +4,11 @@
 // BestMove search Algorithm
 
 Move BestMove;
-int MAX_DEPTH = 7;
-int DEPTH_LIMIT = 7;
 
 // NOTE: Only use this for debug! It is not up to date (no transposition tables)
-int NegaMax(Board &cboard, int moveNr, int depth)
+int NegaMax(Board &cboard, int moveNr, const int max_depth, const int depth)
 {
-	if (depth == MAX_DEPTH) {
+	if (depth == max_depth) {
 		return SCalculateScore(cboard);
 	}
 	
@@ -22,7 +20,7 @@ int NegaMax(Board &cboard, int moveNr, int depth)
 		newboard.MakeMove(mvs[i]);
 		newboard.player = !newboard.player;
 		
-		int score = -NegaMax(newboard, moveNr+1, depth+1);
+		int score = -NegaMax(newboard, moveNr+1, max_depth, depth+1);
 		
 		if (score > bestScore) {
 			bestScore = score;
@@ -38,9 +36,9 @@ int NegaMax(Board &cboard, int moveNr, int depth)
 // This function is intended for debugging purposes only!
 // It acts like NegaMax, but also returns the best move-sequesnce
 // It is not up to date! (no transposition tables)
-int NegaMaxD(vector<Move> &moves, int moveNr, Board &cboard, int depth)
+int NegaMaxD(vector<Move> &moves, int moveNr, Board &cboard, const int max_depth, const int depth)
 {
-	if (depth == MAX_DEPTH) {
+	if (depth == max_depth) {
 		return SCalculateScore(cboard);
 	}
 	
@@ -56,7 +54,7 @@ int NegaMaxD(vector<Move> &moves, int moveNr, Board &cboard, int depth)
 		
 		vector <Move> newmoves;
 		
-		int score = -NegaMaxD(newmoves, moveNr+1, newboard, depth+1);
+		int score = -NegaMaxD(newmoves, moveNr+1, newboard, max_depth, depth+1);
 		
 		if (score > bestScore) {
 			bestScore = score;
@@ -179,7 +177,7 @@ int AlphaBeta(const Board &cboard, const int moveNr, const int max_depth, const 
 int IDDFS(const Board &cboard, const int moveNr, const int max_depth)
 {
 	int score = 0;
-	for (int cdepth=1; cboard.check != MATE && cdepth<max_depth; ++cdepth)
+	for (int cdepth=1; cboard.check != MATE && cdepth<=max_depth; ++cdepth)
 		score = AlphaBeta(cboard, moveNr, cdepth);
 	return score;
 }
@@ -188,9 +186,9 @@ int IDDFS(const Board &cboard, const int moveNr, const int max_depth)
 // This function is intended for debugging purposes only!
 // It acts like AlphaBeta, but also returns the best move-sequesnce
 // It is not up to date! (no transposition tables)
-int AlphaBetaD(vector<Move> &moves, int moveNr, Board &cboard, int depth, int alpha, int beta)
+int AlphaBetaD(vector<Move> &moves, int moveNr, Board &cboard, const int max_depth, int depth, int alpha, int beta)
 {
-	if (depth == MAX_DEPTH) {
+	if (depth == max_depth) {
 		return SCalculateScore(cboard);
 	}
 	
@@ -208,7 +206,7 @@ int AlphaBetaD(vector<Move> &moves, int moveNr, Board &cboard, int depth, int al
 		
 		vector <Move> newmoves;
 
-		int score = -AlphaBetaD(newmoves, moveNr, newboard, depth+1, -beta, -alpha);
+		int score = -AlphaBetaD(newmoves, moveNr, newboard, max_depth, depth+1, -beta, -alpha);
 
 		if (score > alpha) alpha = score;
 		if (score > bestScore) {

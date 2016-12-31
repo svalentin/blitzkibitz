@@ -92,29 +92,24 @@ void terminal_or_xboard(int normal_max_depth)
 #endif
 			}
 			else {
-				int tstart=clock();
-				if (board.GetPieceCount() < 11) {
-					DEPTH_LIMIT = normal_max_depth+1;
-					if (board.GetPieceCount() < 7)
-						DEPTH_LIMIT = normal_max_depth+2;
-					MAX_DEPTH = normal_max_depth;
+				int tstart = clock();
+        int max_depth = normal_max_depth;
+        if (board.GetPieceCount() < 11) {
+          max_depth = max_depth + 1;
+        }
+        if (board.GetPieceCount() < 7) {
+          max_depth = max_depth + 1;
 				}
 				if (startMoves < 4) {
-					startMoves++;
-					MAX_DEPTH++;
-					//score = AlphaBeta(board, moveNr, MAX_DEPTH);
-					score = IDDFS(board, moveNr, MAX_DEPTH);
-					MAX_DEPTH--;
-				}
-				else {
-					//vector<Move> moves;
-					//score = NegaMaxD(moves, moveNr, board, 0);
-					//score = NegaMax(board, moveNr);
-					//score = AlphaBeta(board, moveNr, MAX_DEPTH);
-					score = IDDFS(board, moveNr, MAX_DEPTH);
-					//score = AlphaBetaD(moves, moveNr, board);
-				}
-				printf("BestMove has score %d - calc in %.3fs\n", score,(double)(clock() - tstart) / CLOCKS_PER_SEC);
+          max_depth = max_depth + 1;
+        }
+        //vector<Move> moves;
+        //score = NegaMaxD(moves, moveNr, board, max_depth, 0);
+        //score = NegaMax(board, moveNr, max_depth);
+        //score = AlphaBeta(board, moveNr, max_depth);
+        score = IDDFS(board, moveNr, max_depth);
+        //score = AlphaBetaD(moves, moveNr, board);
+				printf("BestMove has score %d - calc in %.3fs\n", score, (double)(clock() - tstart) / CLOCKS_PER_SEC);
 				m = BestMove;
 				//for (int i=0; i<moves.size(); ++i)
 				//	printf("%c%d -> %c%d\n", 'h'-moves[i].source%8, moves[i].source/8+1, 'h'-moves[i].destination%8, moves[i].destination/8+1);

@@ -75,6 +75,6 @@ ifndef TERM
 	del BlitzKibitz.exe
 	del *.o
 else
-	rm BlitzKibitz
-	rm *.o
+	rm -f BlitzKibitz BlitzKibitz.exe
+	rm -f *.o
 endif
