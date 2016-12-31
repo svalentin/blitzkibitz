@@ -7,28 +7,28 @@ void XPlay(int normal_max_depth, Board &board)
 	string buffer;
 	Openings Op;
 	Op.InitOpenings("openings.bk");
-	
+
 	FILE *logf = fopen("BlitzKibitz-xboard.log", "wt");
 	FILE *loga = fopen("BlitzKibitz-oponent.log", "wt");
 	setvbuf(logf, 0, _IONBF, 0);
 	setvbuf(loga, 0, _IONBF, 0);
-	
+
 	// disable buffer use
 	setvbuf(stdin, 0, _IONBF, 0);
 	setvbuf(stdout, 0, _IONBF, 0);
 
 	fprintf(logf, "buffers set to 0\n");
 	int moveNr = 1;
-  fprintf(logf, "Begin - max depth %d\n", normal_max_depth);
+	fprintf(logf, "Begin - max depth %d\n", normal_max_depth);
 	printf("Begin\n");
 	while (1) {
 		Move m;
-		
+
 		if (board.player == opponent || opponent == -1) {
 			fgets(cbuffer, 128, stdin); cbuffer[strlen(cbuffer)-1] = 0;
 			buffer = cbuffer;
 			fprintf(logf, "cbuffer: `%s`\n", cbuffer);
-			
+
 			m.flags = 0;
 			m = DecodeACN(cbuffer, board);
 //			fprintf(logf, "DecodeACN finished with m.flags=%d\n", m.flags);
@@ -66,18 +66,18 @@ void XPlay(int normal_max_depth, Board &board)
 				}
 				// make sure we don't consider valid xboard commands as errors
 				else if (buffer.find("accepted")!=string::npos
-                 || buffer.find("random")!=string::npos) {
+								 || buffer.find("random")!=string::npos) {
 				}
 				else if (buffer.find("level")!=string::npos
-                 || buffer.find("hard")!=string::npos) {
+								 || buffer.find("hard")!=string::npos) {
 				}
 				else if (buffer.find("time")!=string::npos
-                 || buffer.find("otim")!=string::npos) {
+								 || buffer.find("otim")!=string::npos) {
 				}
-        else if (buffer == "post") {
-          // Turn on thinking/pondering output.
-          // We don't do that so ignore it.
-        }
+				else if (buffer == "post") {
+					// Turn on thinking/pondering output.
+					// We don't do that so ignore it.
+				}
 				else {
 					fprintf(logf, "error :|\n");
 					board.PrintBoard(logf);
@@ -95,15 +95,15 @@ void XPlay(int normal_max_depth, Board &board)
 			m = Op.GetMoveFromDB(board);
 			if (m.flags == ERROR) {
 				int score = 0;
-        int max_depth = normal_max_depth;
+				int max_depth = normal_max_depth;
 				if (moveNr < 8) {
-          max_depth = max_depth + 1;
+					max_depth = max_depth + 1;
 				}
 				if (board.GetPieceCount() < 11) {
 					max_depth = max_depth + 1;
 				}
 				fprintf(logf, "Playing at %d plies\n", max_depth);
-        score = IDDFS(board, moveNr, max_depth);
+				score = IDDFS(board, moveNr, max_depth);
 				m = BestMove;
 				fprintf(logf, "Move #%d\n", moveNr);
 				fprintf(logf, "BestMove has score %d\n", score);
@@ -111,7 +111,7 @@ void XPlay(int normal_max_depth, Board &board)
 			else {
 				fprintf(logf, "Move #%d found in DB!\n", moveNr);
 			}
-			
+
 			if (m.flags & DRAW) {
 				// I can't make any move
 				printf("1/2-1/2 {Stalemate}");
@@ -122,7 +122,7 @@ void XPlay(int normal_max_depth, Board &board)
 				string enc = EncodeACN(m, board);
 				fprintf(logf, "%s\n", enc.c_str());
 				printf("move %s\n", enc.c_str());
-				
+
 				if (m.check == MATE) {
 					printf("checkmate");
 					board.MakeMove(m);
@@ -131,7 +131,7 @@ void XPlay(int normal_max_depth, Board &board)
 				}
 			}
 		}
-		
+
 		if (!((m.flags & ERROR) || m.check == MATE || (m.flags & DRAW))) {
 			board.MakeMove(m);
 			board.player = !board.player;
@@ -146,7 +146,7 @@ void XPlay(int normal_max_depth, Board &board)
 		fprintf(logf, "\n");
 	}
 	fprintf(logf, "I'm done!\n");
-  
-  fclose(logf);
-  fclose(loga);
+
+	fclose(logf);
+	fclose(loga);
 }

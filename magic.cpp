@@ -208,7 +208,7 @@ ull initmagicmoves_Nmoves(const int square)
 ull initmagicmoves_Kmoves(const int square)
 {
 	int col = square%8;
-	
+
 	ull bbKAttacks=0;
 	if (square+1 < 64 && col != 7) SET_BIT(bbKAttacks, square+1);	//left
 	if (square+8 < 64) SET_BIT(bbKAttacks, square+8);				//top
@@ -263,7 +263,7 @@ void initmagicmoves(void)
 			BmagicNOMASK2(i, tempocc) = initmagicmoves_Bmoves (i, tempocc);
 		}
 	}
-	
+
 	for (i = 0; i < 64; ++i) {
 		int squares[64];
 		int numsquares = 0;

@@ -23,14 +23,14 @@ void InitHash()
 ull GetZobristKey(const Board &board)
 {
 	ull key=0;
-	
+
 	// white pieces
 	for (int i=PAWN_W; i<=KING_W; ++i) {
 		ull aux = board.bb[i];
 		for (int pp = LSBi(aux); pp != 64; pp = LSBi(aux))
 			key ^= zobristPieces[i][pp];
 	}
-	
+
 	// black pieces
 	for (int i=PAWN_B; i<=KING_B; ++i) {
 		ull aux = board.bb[i];
@@ -42,13 +42,13 @@ ull GetZobristKey(const Board &board)
 	ull aux = board.castling;
 	for (int pp = LSBi(aux); pp != 64; pp = LSBi(aux))
 		key ^= zobristCastling[pp];
-	
+
 	// enPassant
 	key ^= zobristEnPassant[board.enPassant];
-	
+
 	// who moves
 	if (board.player) key ^= zobristPlayer;
-	
+
 	return key;
 }
 
@@ -69,11 +69,11 @@ void SetHElem(const int index, const HElem elem)
 	// Replace key if table position is empty OR
 	// if number of pieces in stored table is greater or equal to new elem OR
 	// if calculated depth in table is less than the new elem depth
-	
+
 	if (HTable[index].npiece == 0 ||
 		(HTable[index].npiece && HTable[index].npiece >= elem.npiece) ||
 		(HTable[index].depth < elem.depth)) {
-		
+
 		HTable[index] = elem;
 	}
 }

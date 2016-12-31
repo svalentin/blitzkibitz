@@ -36,7 +36,7 @@ typedef unsigned long long ull;
 	 INITIAL_POS_ROOK_W | INITIAL_POS_QUEEN_W  | INITIAL_POS_KING_W)
 #define INITIAL_POS_BLACK_PIECES \
 	((INITIAL_POS_PAWN_W | INITIAL_POS_KNIGHT_W | INITIAL_POS_BISHOP_W | \
-	  INITIAL_POS_ROOK_W | INITIAL_POS_QUEEN_W  | INITIAL_POS_KING_W) << 48)
+		INITIAL_POS_ROOK_W | INITIAL_POS_QUEEN_W  | INITIAL_POS_KING_W) << 48)
 
 
 class Move;
@@ -54,7 +54,7 @@ class Board
 	// bit2 : rocada pe partea reginei pt alb
 	// bit3 : rocada pe partea regelui pt negru
 	// bit4 : rocada pe partea reginei pt negru
-	
+
 	void InitChessboard();
 	void PrintBoard(FILE *fout = stdout) const;
 	void PrintBitBoard(const ull bitboard) const;
@@ -67,11 +67,11 @@ class Board
 	const bool VerifyChess(const ull pos, const int side) const;
 	void SaveBoard(Board &brd) const;
 	void LoadBoard(const Board &brd);
-	
+
 	Board& operator=(const Board &brd);
-	
+
 	private:
-	
+
 	void applyCastling(pair<int, int>, pair<int, int>);
 	const bool appendMoves(vector<Move> &m, ull att, const int piece, const int source) const;
 	const bool validCastling(const int side) const;

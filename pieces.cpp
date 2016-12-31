@@ -17,9 +17,9 @@ bool Move::FindCoordinates(Board &board)
 	ull occ = board.GetOccupancy();
 	int type = PieceMap[piece] + 7*player;
 	ull attack = 0;
-	
+
 	if (piece == 'P') {
-	
+
 		// move one square
 		if (!(flags & CAPTURE)) {
 			if (player) {
@@ -28,7 +28,7 @@ bool Move::FindCoordinates(Board &board)
 			else {
 				SET_BIT(attack, destination-8);
 			}
-			
+
 			// move two squares
 			if (player) {
 				if (!IS_SET_BIT(board.bb[6] | board.bb[13], destination+8))
@@ -53,7 +53,7 @@ bool Move::FindCoordinates(Board &board)
 				if (destination-9 >= 0) SET_BIT(attack, destination-9);
 			}
 		}
-		
+
 	}
 	else if (piece == 'N') {
 		attack = Nmagic(destination);
@@ -70,9 +70,9 @@ bool Move::FindCoordinates(Board &board)
 	else if (piece == 'K') {
 		attack = Kmagic(destination);
 	}
-	
+
 	attack &= board.bb[type];
-	
+
 	// NOTICE: the conditions work, no need to recheck :)
 	if (source/8 < 64) {
 		// we know the line
@@ -82,7 +82,7 @@ bool Move::FindCoordinates(Board &board)
 		// we know the column
 		attack &= cbb[source%8];
 	}
-	
+
 	int valid = 0;
 	ull osrc;
 	while (attack) {
@@ -112,7 +112,7 @@ void initPieces()
 	PieceMap['R'] = ROOK_W;
 	PieceMap['Q'] = QUEEN_W;
 	PieceMap['K'] = KING_W;
-	
+
 	PieceIndexMap[PAWN_W]	= 'P';
 	PieceIndexMap[KNIGHT_W]	= 'N';
 	PieceIndexMap[BISHOP_W]	= 'B';

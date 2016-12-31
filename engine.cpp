@@ -11,7 +11,7 @@ int NegaMax(Board &cboard, int moveNr, const int max_depth, const int depth)
 	if (depth == max_depth) {
 		return SCalculateScore(cboard);
 	}
-	
+
 	int bestScore = -INF;
 	const vector<Move> mvs = cboard.GetMoves();
 	Board newboard;
@@ -19,9 +19,9 @@ int NegaMax(Board &cboard, int moveNr, const int max_depth, const int depth)
 		newboard = cboard;
 		newboard.MakeMove(mvs[i]);
 		newboard.player = !newboard.player;
-		
+
 		int score = -NegaMax(newboard, moveNr+1, max_depth, depth+1);
-		
+
 		if (score > bestScore) {
 			bestScore = score;
 			if (depth == 0) {
@@ -41,21 +41,21 @@ int NegaMaxD(vector<Move> &moves, int moveNr, Board &cboard, const int max_depth
 	if (depth == max_depth) {
 		return SCalculateScore(cboard);
 	}
-	
+
 	int bestScore = -INF;
 	const vector<Move> mvs = cboard.GetMoves();
 	vector<Move> bm;
 	Board newboard;
-	
+
 	for (unsigned int i=0; i<mvs.size(); ++i) {
 		newboard = cboard;
 		newboard.MakeMove(mvs[i]);
 		newboard.player = !newboard.player;
-		
+
 		vector <Move> newmoves;
-		
+
 		int score = -NegaMaxD(newmoves, moveNr+1, newboard, max_depth, depth+1);
-		
+
 		if (score > bestScore) {
 			bestScore = score;
 			bm = newmoves;
@@ -65,7 +65,7 @@ int NegaMaxD(vector<Move> &moves, int moveNr, Board &cboard, const int max_depth
 			}
 		}
 	}
-	
+
 	for (vector<Move>::reverse_iterator i=bm.rbegin(); i!=bm.rend(); i++)
 		moves.insert(moves.begin(), *i);
 	return bestScore;
@@ -95,12 +95,12 @@ int AlphaBeta(const Board &cboard, const int moveNr, const int max_depth, const 
 	}
 
 	// Transposition table stuff
-	
+
 	// TODO: maintain hash key with MakeMove and not recalculate it here
 	ull zkey = GetZobristKey(cboard);
 	ull pzkey = GetPawnZobristKey(cboard);
 	HElem ht = GetHElem(GetHashIndex(zkey));
-	
+
 	if (depth != 0) {
 		// did we calculate this already?
 		if (zkey == ht.zkey && pzkey == ht.pzkey &&
@@ -121,13 +121,13 @@ int AlphaBeta(const Board &cboard, const int moveNr, const int max_depth, const 
 			}
 		}
 	}
-	
+
 	// Get moves and check them
-	
+
 	bool hexact = false;
 	const vector<Move> mvs = cboard.GetMoves();
 	Board newboard;
-	
+
 	if (mvs.empty()) {
 		if (depth == 0) {
 			BestMove.flags = DRAW;
@@ -147,14 +147,14 @@ int AlphaBeta(const Board &cboard, const int moveNr, const int max_depth, const 
 			else return score;
 		}
 	}
-	
+
 	for (unsigned int i=0; i<mvs.size(); ++i) {
 		newboard = cboard;
 		newboard.MakeMove(mvs[i]);
 		newboard.player = !newboard.player;
 
 		int score = -AlphaBeta(newboard, moveNr+1, max_depth, depth+1, -beta, -alpha);
-		
+
 		if (score >= beta) {
 			recordHash(zkey, pzkey, false, false, beta, max_depth-depth, cboard.GetPieceCount());
 			return beta;
@@ -167,10 +167,10 @@ int AlphaBeta(const Board &cboard, const int moveNr, const int max_depth, const 
 			}
 		}
 	}
-	
+
 	// store the key
 	recordHash(zkey, pzkey, hexact, true, alpha, max_depth-depth, cboard.GetPieceCount());
-	
+
 	return alpha;
 }
 
@@ -191,19 +191,19 @@ int AlphaBetaD(vector<Move> &moves, int moveNr, Board &cboard, const int max_dep
 	if (depth == max_depth) {
 		return SCalculateScore(cboard);
 	}
-	
+
 	//int tstart = clock();
-	
+
 	int bestScore = -INF;
 	const vector<Move> mvs = cboard.GetMoves();
 	vector<Move> bm;
 	Board newboard;
-	
+
 	for (unsigned int i=0; i<mvs.size(); ++i) {
 		newboard = cboard;
 		newboard.MakeMove(mvs[i]);
 		newboard.player = !newboard.player;
-		
+
 		vector <Move> newmoves;
 
 		int score = -AlphaBetaD(newmoves, moveNr, newboard, max_depth, depth+1, -beta, -alpha);
@@ -217,10 +217,10 @@ int AlphaBetaD(vector<Move> &moves, int moveNr, Board &cboard, const int max_dep
 				BestMove = mvs[i];
 			}
 		}
-		
+
 		if (alpha >= beta) break;
 	}
-	
+
 	/*
 	if (depth==0 && (double)(clock() - tstart) / CLOCKS_PER_SEC < 1) {
 		MAX_DEPTH+=1;

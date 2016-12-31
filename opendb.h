@@ -19,7 +19,7 @@ class Openings
 		unordered_map<const string, const string, hash<string> > OpenDB;
 		void InitOpenings(const char*);
 		Move GetMoveFromDB(Board &b);
-}; 
+};
 
 char *toFEN(Board &b);
 

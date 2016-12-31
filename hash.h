@@ -21,7 +21,7 @@ class HElem
 	int score;				// evaluated score
 	unsigned char depth;	// depth calculated from this point
 	unsigned char npiece;	// number of pieces left on the board
-	
+
 	// Constructors
 	HElem() : zkey(0), exact(0), lbound(0), score(0), depth(0), npiece(0) { }
 	HElem(ull zkey, bool exact, bool lbound, int score,

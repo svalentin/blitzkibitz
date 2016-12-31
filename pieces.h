@@ -56,12 +56,12 @@ class Move
 	char promote_to;	// character to mark the pawn promotion piece
 	int player;			// 0 = WHITE  and  1 = BLACK
 	bool FindCoordinates(Board &b);
-	
+
 	Move()
 	{
 		source = destination = piece = flags = check = promote_to = player = 0;
 	}
-	
+
 	const bool operator<(const Move &b) const
 	{
 		if (b.check == MATE) return false;

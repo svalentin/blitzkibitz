@@ -1,7 +1,7 @@
 #include "board.h"
 
 // Lookuptable for LSB function
-int LookupBit[64] = 
+int LookupBit[64] =
 {
 	63,  0, 58,  1, 59, 47, 53,  2,
 	60, 39, 48, 27, 54, 33, 42,  3,
@@ -89,7 +89,7 @@ void Board::PrintBoard(FILE *fout) const
 
 /// Function that prints a bit board on screen using 1 and 0
 void Board::PrintBitBoard(const ull bitboard) const
-{   
+{
 	ull bit = 1LL<<63;
 	for (int i=0; i<8; ++i) {
 		printf("  "); // whitespace to align with the ShowPieces board
@@ -113,7 +113,7 @@ void Board::applyCastling(pair<int, int> R, pair<int, int> K)
 #ifdef DEBUG
 	Board old = *this;
 #endif
-	
+
 	// pierde dreptul la rocada pe viitor
 	CLEAR_BIT_UCHAR(castling, player*2);
 	CLEAR_BIT_UCHAR(castling, player*2+1);
@@ -124,13 +124,13 @@ void Board::applyCastling(pair<int, int> R, pair<int, int> K)
 	SET_BIT(bb[6 + p1], R.second + p2);
 	CLEAR_BIT(bb[3 + p1], R.first + p2);
 	CLEAR_BIT(bb[6 + p1], R.first + p2);
-	
+
 	// king
 	SET_BIT(bb[5 + p1], K.second + p2);
 	SET_BIT(bb[6 + p1], K.second + p2);
 	CLEAR_BIT(bb[5 + p1], K.first + p2);
 	CLEAR_BIT(bb[6 + p1], K.first + p2);
-	
+
 #ifdef DEBUG
 	ull aux = bb[5];
 	int x = LSBi(aux);
@@ -143,7 +143,7 @@ void Board::applyCastling(pair<int, int> R, pair<int, int> K)
 		old.ShowPieces();
 		printf("%d %d + %d %d + %d\n", R.first, R.second, K.first, K.second, player);
 		printf("%d %d + %d %d\n", R.first + p2, R.second + p2, K.first + p2, K.second + p2);
-		
+
 		exit(0);
 	}
 #endif
@@ -152,20 +152,20 @@ void Board::applyCastling(pair<int, int> R, pair<int, int> K)
 /// Given a Move, it applies that move on the board.
 /// It does not check for validity! It presumes the move is valid on the board
 int Board::MakeMove(const Move mv)
-{	
-	// presupunand ca a facut o mutare valida, 
+{
+	// presupunand ca a facut o mutare valida,
 	// jucatorul curent iese din check; daca a fost :P
 	if (check != -1)
 		check = 0;
 
-	// chess	
+	// chess
 	if (mv.check == CHECK)
 		check |= CHECK;
-	
+
 	// fatality
 	if (mv.check == MATE)
 		check |= MATE;
- 
+
 	if (mv.flags == KING_SIDE_CASTLE) {
 		applyCastling(make_pair(0,2), make_pair(3,1));
 		return 0;
@@ -175,24 +175,24 @@ int Board::MakeMove(const Move mv)
 		applyCastling(make_pair(7,4), make_pair(3,5));
 		return 0;
 	}
- 
+
 	int dest = mv.destination;
 	int src  = mv.source;
 	int DestPieceType = GetPieceType(dest);
 	int SrcPieceType  = GetPieceType(src);
 	int DestPieceColor, SrcPieceColor;
-	
+
 	// daca regele sau tura se misca pierdem dreptul la rocada
 	if (mv.piece == 'K') {
 		CLEAR_BIT_UCHAR(castling, player*2);
 		CLEAR_BIT_UCHAR(castling, player*2+1);
 	}
-	
+
 	if (mv.piece == 'R') {
 		if (src%8 == 0) CLEAR_BIT_UCHAR(castling, player*2);
 		if (src%8 == 7) CLEAR_BIT_UCHAR(castling, player*2+1);
 	}
-		
+
 	// dreptul de enpass se pierde (indiferent de mutare)
 	enPassant = 0;
 	// un pion ce se deplaseaza 2 patratele
@@ -200,7 +200,7 @@ int Board::MakeMove(const Move mv)
 	if (mv.piece == 'P' && abs(dest - src) == 16) {
 		enPassant = dest + (player ? 8 : -8);
 	}
-	
+
 	if (SrcPieceType <= 5)
 		SrcPieceColor = 6;
 	else
@@ -210,7 +210,7 @@ int Board::MakeMove(const Move mv)
 		DestPieceColor = 6;
 	else
 		DestPieceColor = 13;
-	
+
 
 	SET_BIT(bb[SrcPieceType], dest);
 	CLEAR_BIT(bb[SrcPieceType], src);
@@ -230,7 +230,7 @@ int Board::MakeMove(const Move mv)
 			CLEAR_BIT(bb[13], dest - 8);
 		}
 	}
-	
+
 	if (DestPieceType != -1) {
 		CLEAR_BIT(bb[DestPieceType], dest);
 		CLEAR_BIT(bb[DestPieceColor], dest);
@@ -240,11 +240,11 @@ int Board::MakeMove(const Move mv)
 			if (dest%8 == 7) CLEAR_BIT_UCHAR(castling, (!player)*2+1);
 		}
 	}
-	
+
 	// promote
 	if (mv.promote_to) {
 		int type = PieceMap[mv.promote_to] + 7*player;
-		
+
 		CLEAR_BIT(bb[SrcPieceType], dest);
 		SET_BIT(bb[type], dest);
 	}
@@ -264,13 +264,13 @@ const bool Board::VerifyChess(const ull pos, const int side) const
 	ull bb_cpy;
 	int piece;
 	int piece_pos;
-	
+
 	ull occ = GetOccupancy();
-	
+
 	// KNIGHT
 	piece = 1 + 7*side;
 	bb_cpy = bb[piece];
-	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy)) 
+	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy))
 		if (pos & Nmagic(piece_pos))
 			return true;
 
@@ -287,26 +287,26 @@ const bool Board::VerifyChess(const ull pos, const int side) const
 	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy))
 		if (pos & Rmagic(piece_pos, occ))
 			return true;
-  
+
 	// QUEEN
 	piece = 4 + 7*side;
 	bb_cpy = bb[piece];
 	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy))
 		if (pos & Qmagic(piece_pos, occ))
 			return true;
-	
+
 	// KING
 	piece = 5 + 7*side;
 	bb_cpy = bb[piece];
 	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy))
 		if (pos & Kmagic(piece_pos))
 			return true;
-	
+
 	// PAWNS
 	int pl = side ? -1 : 1;
 	piece = 0 + 7*side;
 	bb_cpy = bb[piece];
-	
+
 	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy)) {
 		int col = piece_pos%8;
 		ull pw = 0;
@@ -314,11 +314,11 @@ const bool Board::VerifyChess(const ull pos, const int side) const
 		// attack right corner
 		if (!(side && col == 7) && !(!side && col == 0))
 			SET_BIT(pw, piece_pos + 7 * pl);
-		
+
 		// attack left corner
 		if (!(!side && col == 7) && !(side && col == 0))
 			SET_BIT(pw, piece_pos + 9 * pl);
-		
+
 		if (pos & pw)
 			return true;
 	}
@@ -330,7 +330,7 @@ const bool Board::VerifyChess(const ull pos, const int side) const
 const bool Board::validCastling(const int side) const
 {
 	ull chess_field, occ_field, pawns_att;
-	
+
 	if (!side) {
 		chess_field = 0xEULL<<(56*player);
 		occ_field = 0x6ULL<<(56*player);
@@ -341,16 +341,16 @@ const bool Board::validCastling(const int side) const
 		occ_field = 0x70ULL<<(56*player);
 		pawns_att = 0x7C00ULL<<(40*player);
 	}
-		
+
 	if (occ_field & (bb[WHITE_PIECE] | bb[BLACK_PIECE]))
 		return false;
-	
+
 	if (pawns_att & (bb[0 + 7*(!player)]))
 		return false;
-	
+
 	if (VerifyChess(chess_field, !player))
 		return false;
-	
+
 	return true;
 }
 
@@ -359,10 +359,10 @@ int Board::WeGiveCheckOrMate(const Move mv) const
 {
 	int check = 0;
 	Board brdinf;
-	
+
 	SaveBoard(brdinf);
 	brdinf.MakeMove(mv);
-	
+
 	// if we check
 	if (brdinf.check != -1 && brdinf.VerifyChess(brdinf.bb[5 + 7*(!brdinf.player)], brdinf.player)) {
 		check = CHECK;
@@ -386,7 +386,7 @@ const bool Board::appendMoves(vector<Move> &m, ull att, const int piece, const i
 	mv.promote_to = mv.check = mv.flags = 0;
 	mv.player = player;
 	mv.piece = toupper(PieceIndexMap[piece]);
-	
+
 	att ^= (bb[6 + 7*player] & att); // do not move a piece over one of the same colour
 	for (int dest=LSBi(att); dest!=64; dest = LSBi(att)) {
 		mv.promote_to = 0;
@@ -400,7 +400,7 @@ const bool Board::appendMoves(vector<Move> &m, ull att, const int piece, const i
 			mv.flags = CAPTURE;
 		else
 			mv.flags = 0;
-				
+
 		if (mv.piece == 'P') {
 			if (dest == enPassant && enPassant != 0)
 				mv.flags = ENPASS;
@@ -411,12 +411,12 @@ const bool Board::appendMoves(vector<Move> &m, ull att, const int piece, const i
 		// daca dam check sau mat
 		if (check != -1)
 			mv.check = WeGiveCheckOrMate(mv);
-		
+
 		// daca ramanem in check
 		Board brdinf;
 		SaveBoard(brdinf);
 		brdinf.MakeMove(mv);
-		
+
 		bool ch = brdinf.VerifyChess(brdinf.bb[5 + 7*brdinf.player], !brdinf.player);
 		if ((brdinf.check && !ch) || !ch) {
 			m.push_back(mv);
@@ -430,7 +430,7 @@ const bool Board::appendMoves(vector<Move> &m, ull att, const int piece, const i
 		if (ch) printf("Ramanem in check!  ");
 #endif
 	}
-	
+
 	return false;
 }
 
@@ -443,9 +443,9 @@ vector<Move> Board::GetMoves() const
 	ull occ, bb_cpy;
 	int piece_pos;
 	int piece;
-	
+
 	occ = GetOccupancy();
-	
+
 	// kNight
 	piece = 1 + 7*player;
 	bb_cpy = bb[piece];
@@ -453,7 +453,7 @@ vector<Move> Board::GetMoves() const
 		if (appendMoves(M, Nmagic(piece_pos), piece, piece_pos))
 			return M;
 	}
-	
+
 	// Bishop
 	piece = 2 + 7*player;
 	bb_cpy = bb[piece];
@@ -461,7 +461,7 @@ vector<Move> Board::GetMoves() const
 		if (appendMoves(M, Bmagic(piece_pos, occ), piece, piece_pos))
 			return M;
 	}
-	
+
 	// Rock
 	piece = 3 + 7*player;
 	bb_cpy = bb[piece];
@@ -469,7 +469,7 @@ vector<Move> Board::GetMoves() const
 		if (appendMoves(M, Rmagic(piece_pos, occ), piece, piece_pos))
 			return M;
 	}
-		
+
 	// Queen
 	piece = 4 + 7*player;
 	bb_cpy = bb[piece];
@@ -477,7 +477,7 @@ vector<Move> Board::GetMoves() const
 		if (appendMoves(M, Qmagic(piece_pos, occ), piece, piece_pos))
 			return M;
 	}
-	
+
 	// King
 	piece = 5 + 7*player;
 	bb_cpy = bb[piece];
@@ -485,19 +485,19 @@ vector<Move> Board::GetMoves() const
 		if (appendMoves(M, Kmagic(piece_pos), piece, piece_pos))
 			return M;
 	}
-	
+
 	Move m;
 
 	// CASTLING KING SIDE
 	if (castling & (1 << (player<<1)) && validCastling(0)) {
 		m.player = player;
 		m.flags = KING_SIDE_CASTLE;
-		
+
 		// daca dam check sau mat
 		m.check = 0;
 		if (check != -1)
 			m.check = WeGiveCheckOrMate(m);
-		
+
 		M.push_back(m);
 		if (check == -1)
 			return M;
@@ -505,17 +505,17 @@ vector<Move> Board::GetMoves() const
 		printf("O-O  ");
 #endif
 	}
-	
+
 	// CASTLING QUEEN SIDE
 	if (castling & (2 << (player<<1)) && validCastling(1)) {
 		m.player = player;
 		m.flags = QUEEN_SIDE_CASTLE;
-		
+
 		// daca dam check sau mat
 		m.check = 0;
 		if (check != -1)
 			m.check = WeGiveCheckOrMate(m);
-		
+
 		M.push_back(m);
 		if (check == -1)
 			return M;
@@ -523,11 +523,11 @@ vector<Move> Board::GetMoves() const
 		printf("O-O-O  ");
 #endif
 	}
-	
+
 	// PAWNS
 	ull p_att = 0, pl;
 	int poss;
-	
+
 	pl = player ? -1 : 1;
 	piece = 0 + 7*player;
 	bb_cpy = bb[piece];
@@ -555,7 +555,7 @@ vector<Move> Board::GetMoves() const
 			if ((DestPieceType != -1 && DestPieceColor == !player) || enPassant == poss)
 				SET_BIT(p_att, poss);
 		}
-			
+
 		// attack left corner
 		if (!(!player && col == 7) && !(player && col == 0)) {
 			poss = piece_pos + 9 * pl;
@@ -567,9 +567,9 @@ vector<Move> Board::GetMoves() const
 		if (appendMoves(M, p_att, piece, piece_pos))
 			return M;
 	}
-	
+
 	sort(M.begin(), M.end());
-	
+
 	return M;
 }
 
@@ -630,13 +630,13 @@ int LSB(const ull b)
 		}
 	#else
 		asm(
-			"   bsf	 %2, %0"	 "\n\t" 
-			"   jnz	 2f"		 "\n\t" 
-			"   bsf	 %1, %0"	 "\n\t" 
-			"   jnz	 1f"		 "\n\t" 
-			"   movl	$64, %0"	"\n\t" 
-			"   jmp	 2f"		 "\n\t" 
-			"1: addl	$32,%0"	 "\n\t" 
+			"   bsf	 %2, %0"	 "\n\t"
+			"   jnz	 2f"		 "\n\t"
+			"   bsf	 %1, %0"	 "\n\t"
+			"   jnz	 1f"		 "\n\t"
+			"   movl	$64, %0"	"\n\t"
+			"   jmp	 2f"		 "\n\t"
+			"1: addl	$32,%0"	 "\n\t"
 			"2:"
 			:   "=&q"(ra), "=&q"(rb), "=&q"(rc)
 			:   "1"((int) (b >> 32)), "2"((int) b)
@@ -672,12 +672,12 @@ int MSB(const ull b)
 #else
 	asm(
 		"   bsr	 %1, %0"	 "\n\t"
-		"   jnz	 1f"		 "\n\t" 
-		"   bsr	 %2, %0"	 "\n\t" 
-		"   jnz	 2f"		 "\n\t" 
-		"   movl	$64, %0"	"\n\t" 
-		"   jmp	 2f"		 "\n\t" 
-		"1: addl	$32,%0"	 "\n\t" 
+		"   jnz	 1f"		 "\n\t"
+		"   bsr	 %2, %0"	 "\n\t"
+		"   jnz	 2f"		 "\n\t"
+		"   movl	$64, %0"	"\n\t"
+		"   jmp	 2f"		 "\n\t"
+		"1: addl	$32,%0"	 "\n\t"
 		"2:"
 		:   "=&q"(ra), "=&q"(rb), "=&q"(rc)
 		:   "1"((int) (b >> 32)), "2"((int) b)

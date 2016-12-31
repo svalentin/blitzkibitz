@@ -1,5 +1,5 @@
 #include <cstdio>
-#include <cstdlib> 
+#include <cstdlib>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -25,11 +25,11 @@ void clrscr(void)
 
 char* getCmdOption(char **begin, char **end, const std::string &option)
 {
-    char **itr = find(begin, end, option);
-    if (itr != end && ++itr != end) {
-        return *itr;
-    }
-    return 0;
+	char **itr = find(begin, end, option);
+	if (itr != end && ++itr != end) {
+		return *itr;
+	}
+	return 0;
 }
 
 void terminal_or_xboard(int normal_max_depth)
@@ -39,10 +39,10 @@ void terminal_or_xboard(int normal_max_depth)
 
 	int opponent = 0;
 	char com[128];
-	
+
 	printf("Choose a color (0 - white, 1 - black)\n"); // '\n' must exist for xboard
 	gets(com);
-	
+
 	// if we don't recieve a color, then turn to xboard mode!
 	if (!sscanf(com, "%d", &opponent)) {
 		printf("feature san=1\n");
@@ -58,11 +58,11 @@ void terminal_or_xboard(int normal_max_depth)
 		XPlay(normal_max_depth, board);
 		return;
 	}
-	
+
 	printf("Enter the move in ACN format:\n");
 	printf("You can exit the program with \"quit\"\n");
 	board.PrintBoard();
-	
+
 	Openings Op;
 	Op.InitOpenings("openings.bk");
 
@@ -71,13 +71,13 @@ void terminal_or_xboard(int normal_max_depth)
 	int score = 0;
 	while (board.check != MATE) {
 		Move m;
-		
+
 		if (board.player == opponent) {
 			gets(com);
-			
+
 			if (strcmp(com, "quit") == 0) break;
 			if (strcmp(com, "q") == 0) break;
-			
+
 			m.flags = 0;
 			m = DecodeACN(com, board);
 			clrscr();
@@ -93,22 +93,22 @@ void terminal_or_xboard(int normal_max_depth)
 			}
 			else {
 				int tstart = clock();
-        int max_depth = normal_max_depth;
-        if (board.GetPieceCount() < 11) {
-          max_depth = max_depth + 1;
-        }
-        if (board.GetPieceCount() < 7) {
-          max_depth = max_depth + 1;
+				int max_depth = normal_max_depth;
+				if (board.GetPieceCount() < 11) {
+					max_depth = max_depth + 1;
+				}
+				if (board.GetPieceCount() < 7) {
+					max_depth = max_depth + 1;
 				}
 				if (startMoves < 4) {
-          max_depth = max_depth + 1;
-        }
-        //vector<Move> moves;
-        //score = NegaMaxD(moves, moveNr, board, max_depth, 0);
-        //score = NegaMax(board, moveNr, max_depth);
-        //score = AlphaBeta(board, moveNr, max_depth);
-        score = IDDFS(board, moveNr, max_depth);
-        //score = AlphaBetaD(moves, moveNr, board);
+					max_depth = max_depth + 1;
+				}
+				//vector<Move> moves;
+				//score = NegaMaxD(moves, moveNr, board, max_depth, 0);
+				//score = NegaMax(board, moveNr, max_depth);
+				//score = AlphaBeta(board, moveNr, max_depth);
+				score = IDDFS(board, moveNr, max_depth);
+				//score = AlphaBetaD(moves, moveNr, board);
 				printf("BestMove has score %d - calc in %.3fs\n", score, (double)(clock() - tstart) / CLOCKS_PER_SEC);
 				m = BestMove;
 				//for (int i=0; i<moves.size(); ++i)
@@ -118,16 +118,16 @@ void terminal_or_xboard(int normal_max_depth)
 			string enc = EncodeACN(m, board);
 			printf("move %s\n", enc.c_str());
 		}
-		
+
 		if (strcmp(com, "quit") == 0) break;
 		if (strcmp(com, "q") == 0) break;
-		
+
 
 		if (!(m.flags & ERROR)) {
 			board.MakeMove(m);
 			board.player = !board.player;
 		}
-		
+
 		board.PrintBoard();
 	}
 
@@ -142,13 +142,13 @@ int main(int argc, char* argv[])
 	initmagicmoves();
 	initPieces();
 	InitHash();
-	
-  int default_max_depth = 7;
-  char *default_max_depth_char = getCmdOption(argv, argv + argc, "--depth");
-  if (default_max_depth_char) {
-    default_max_depth = std::atoi(default_max_depth_char);
-  }
-  
+
+	int default_max_depth = 7;
+	char *default_max_depth_char = getCmdOption(argv, argv + argc, "--depth");
+	if (default_max_depth_char) {
+		default_max_depth = std::atoi(default_max_depth_char);
+	}
+
 	terminal_or_xboard(default_max_depth);
 
 	return 0;

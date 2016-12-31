@@ -23,7 +23,7 @@ const int PieceScore[6] =
 	ROOK_SCORE, QUEEN_SCORE, KING_SCORE
 };
 
-const int AttackScore[64] = 
+const int AttackScore[64] =
 {
 	0,  0,  0,  0,  0,  0,  0,  0,
 	0,  1,  1,  1,  1,  1,  1,  0,
@@ -36,7 +36,7 @@ const int AttackScore[64] =
 };
 
 const int IsolatedPawnPenalty[8] = {10, 12, 14, 18, 18, 14, 12, 10};
-	
+
 const int PiecePositionScore[7][64] =
 {
 	// Pawn scores White

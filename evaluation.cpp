@@ -5,14 +5,14 @@ inline void evalPieces(const Board &cboard, int &wscore, int &bscore)
 	// white score
 	for (int i=0; i<6; ++i) {
 		ull aux = cboard.bb[i];
-		for (int pp = LSBi(aux); pp != 64; pp = LSBi(aux)) 
+		for (int pp = LSBi(aux); pp != 64; pp = LSBi(aux))
 			wscore += PieceScore[i];
 	}
-	
+
 	// black score
 	for (int i=0; i<6; ++i) {
 		ull aux = cboard.bb[i+7];
-		for (int pp = LSBi(aux); pp != 64; pp = LSBi(aux)) 
+		for (int pp = LSBi(aux); pp != 64; pp = LSBi(aux))
 			bscore += PieceScore[i];
 	}
 }
@@ -24,13 +24,13 @@ inline void evalPawn(const Board &cboard, const int gameStage, int &wscore, int 
 	if (gameStage == 1) pawnPieceScale = 0.25, pawnPosScale = 1.3;
 	if (gameStage == 2) pawnPieceScale = 0.40, pawnPosScale = 1.7;
 	if (gameStage == 3) pawnPieceScale = 0.70, pawnPosScale = 2.0;
-	
+
 	// white
 	ull aux = cboard.bb[0];
 	for (int pp = LSBi(aux); pp != 64; pp = LSBi(aux)) {
 		wscore += (int) (PieceScore[0] * pawnPieceScale);
 		wscore += (int) (PiecePositionScore[0][63-pp] * pawnPosScale);
-		
+
 		// check if it's on an empty file or a half-empty file
 		int col = pp % 8;
 		if (MSB(cbb[col] & (cboard.bb[6] | cboard.bb[13])) == pp) {
@@ -41,20 +41,20 @@ inline void evalPawn(const Board &cboard, const int gameStage, int &wscore, int 
 			// there is another pawn on the same file
 			wscore -= (int) (12 * pawnPosScale);
 		}
-		
+
 		// isolated pawns get a penalty
-		if ((col==0 || (col>0 && LSB(cbb[col-1] & cboard.bb[0]) == 64)) && 
+		if ((col==0 || (col>0 && LSB(cbb[col-1] & cboard.bb[0]) == 64)) &&
 			(col==7 || (col<7 && LSB(cbb[col+1] & cboard.bb[0]) == 64))) {
 			wscore -= IsolatedPawnPenalty[col];
 		}
 	}
-	
+
 	// black
 	aux = cboard.bb[0+7];
 	for (int pp = LSBi(aux); pp != 64; pp = LSBi(aux)) {
 		bscore += (int) (PieceScore[0] * pawnPieceScale);
 		bscore += (int) (PiecePositionScore[0][63 - (pp%8 + (7-(pp/8))*8)] * pawnPosScale);
-		
+
 		// check if it's on an empty file or a half-empty file
 		int col = pp % 8;
 		if (LSB(cbb[col] & (cboard.bb[6] | cboard.bb[13])) == pp) {
@@ -67,7 +67,7 @@ inline void evalPawn(const Board &cboard, const int gameStage, int &wscore, int 
 		}
 
 		// isolated pawns get a penalty
-		if ((col==0 || (col>0 && LSB(cbb[col-1] & cboard.bb[7]) == 64)) && 
+		if ((col==0 || (col>0 && LSB(cbb[col-1] & cboard.bb[7]) == 64)) &&
 			(col==7 || (col<7 && LSB(cbb[col+1] & cboard.bb[7]) == 64))) {
 			bscore -= IsolatedPawnPenalty[col];
 		}
@@ -77,12 +77,12 @@ inline void evalPawn(const Board &cboard, const int gameStage, int &wscore, int 
 
 inline void evalKing(const Board &cboard, const int gameStage, int &wscore, int &bscore)
 {
-  // In late game, use a different piece position scoring table at KING_W+1  
-  const int piece_position_table = gameStage > 1 ? KING_W+1 : KING_W;
-  
+	// In late game, use a different piece position scoring table at KING_W+1
+	const int piece_position_table = gameStage > 1 ? KING_W+1 : KING_W;
+
 	const int wpos = LSB(cboard.bb[KING_W]);
-  wscore += PiecePositionScore[piece_position_table][63-wpos];
-		
+	wscore += PiecePositionScore[piece_position_table][63-wpos];
+
 	const int bpos = LSB(cboard.bb[KING_B]);
 	bscore += PiecePositionScore[piece_position_table][63 - (bpos%8 + (7-(bpos/8))*8)];
 }
@@ -91,19 +91,19 @@ int CalculateScore(const Board &cboard)
 {
 	int wscore=0, bscore=0;
 	int gameStage=0;
-	
+
 	evalPieces(cboard, wscore, bscore);
 
 	if (wscore < KING_SCORE+2000 || bscore < KING_SCORE+2000) gameStage = 1;
 	if (wscore < KING_SCORE+1500 || bscore < KING_SCORE+1500) gameStage = 2;
 	if (wscore < KING_SCORE+1000 || bscore < KING_SCORE+1000) gameStage = 3;
-	
+
 	evalPawn(cboard, gameStage, wscore, bscore);
 	evalKing(cboard, gameStage, wscore, bscore);
-	
+
 	//////
 	// Position score
-	
+
 	ull attack = 0;
 	ull occ = cboard.GetOccupancy();
 
@@ -111,7 +111,7 @@ int CalculateScore(const Board &cboard)
 	for (int i=PAWN_W; i<=KING_W; ++i) {
 		ull aux = cboard.bb[i];
 		for (int pos = LSBi(aux); pos != 64; pos = LSBi(aux)) {
-			
+
 			// attack squares
 			if (i == PAWN_W) {
 				if (pos+7 < 64) SET_BIT(attack, pos+7);
@@ -134,22 +134,22 @@ int CalculateScore(const Board &cboard)
 				attack |= Kmagic(pos);
 				continue;
 			}
-			
+
 			// piece position
 			wscore += PiecePositionScore[i][63-pos];
 		}
 	}
-	
+
 	for (int i=LSBi(attack); i != 64; i = LSBi(attack)) {
 		wscore += AttackScore[i];
 	}
-	
+
 	// black
 	attack = 0;
 	for (int i=PAWN_B; i<=KING_B; ++i) {
 		ull aux = cboard.bb[i];
 		for (int pos = LSBi(aux); pos != 64; pos = LSBi(aux)) {
-		
+
 			// attack squares
 			if (i == PAWN_B) {
 				if (pos-7 >= 0) SET_BIT(attack, pos-7);
@@ -172,7 +172,7 @@ int CalculateScore(const Board &cboard)
 				attack |= Kmagic(pos);
 				continue;
 			}
-			
+
 			// piece position
 			bscore += PiecePositionScore[i-7][63 - (pos%8 + (7-(pos/8))*8)];
 		}

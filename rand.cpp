@@ -103,8 +103,8 @@ ull GetRand64()
 		isaac();
 		i=0;
 	}
-  const ull a = (ull) randrsl[i++] << 32ULL;
-  const ull b = (ull) randrsl[i++];
+	const ull a = (ull) randrsl[i++] << 32ULL;
+	const ull b = (ull) randrsl[i++];
 	return a | b;
 }
 

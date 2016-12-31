@@ -9,16 +9,16 @@ void Openings::InitOpenings(const char *file_name)
 	}
 
 	while (1) {
-    char buf[100];
-
-    if (!(fgets(buf, 100, f))) break;
-		if (strstr(buf, "#END#"))  break;
-    buf[strlen(buf)-1] = 0;
-    const string sFEN = buf;
+		char buf[100];
 
 		if (!(fgets(buf, 100, f))) break;
-    *strchr(buf, '{') = 0;
-    OpenDB.emplace(sFEN, buf);
+		if (strstr(buf, "#END#"))  break;
+		buf[strlen(buf)-1] = 0;
+		const string sFEN = buf;
+
+		if (!(fgets(buf, 100, f))) break;
+		*strchr(buf, '{') = 0;
+		OpenDB.emplace(sFEN, buf);
 	}
 
 	fclose(f);
@@ -40,8 +40,8 @@ Move Openings::GetMoveFromDB(Board &board)
 		mv.flags = ERROR; // NO_MOVE
 		return mv;
 	}
-  
-  const string mvch = OpenDB.at(sFEN);
+
+	const string mvch = OpenDB.at(sFEN);
 
 	mv.source = COORDS_TO_INDEX(mvch[1] - '1', 'h' - mvch[0]);
 	mv.destination = COORDS_TO_INDEX(mvch[3] - '1', 'h' - mvch[2]);
