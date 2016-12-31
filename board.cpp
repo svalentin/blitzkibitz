@@ -387,7 +387,7 @@ const bool Board::appendMoves(vector<Move> &m, ull att, const int piece, const i
 	mv.player = player;
 	mv.piece = toupper(PieceIndexMap[piece]);
 	
-	att ^= (bb[6 + 7*player] & att); // do not move a piece over one of the same color
+	att ^= (bb[6 + 7*player] & att); // do not move a piece over one of the same colour
 	for (int dest=LSBi(att); dest!=64; dest = LSBi(att)) {
 		mv.promote_to = 0;
 		if (mv.check != -1)
@@ -552,7 +552,7 @@ vector<Move> Board::GetMoves() const
 			poss = piece_pos + 7 * pl;
 			int DestPieceType = GetPieceType(poss);
 			int DestPieceColor = !(DestPieceType <= 5);
-			if (DestPieceType != -1 && DestPieceColor == !player  || enPassant == poss)
+			if ((DestPieceType != -1 && DestPieceColor == !player) || enPassant == poss)
 				SET_BIT(p_att, poss);
 		}
 			
@@ -561,7 +561,7 @@ vector<Move> Board::GetMoves() const
 			poss = piece_pos + 9 * pl;
 			int DestPieceType = GetPieceType(poss);
 			int DestPieceColor = !(DestPieceType <= 5);
-			if (DestPieceType != -1 && DestPieceColor == !player  || (enPassant == poss && enPassant != 0))
+			if ((DestPieceType != -1 && DestPieceColor == !player) || (enPassant == poss && enPassant != 0))
 				SET_BIT(p_att, poss);
 		}
 		if (appendMoves(M, p_att, piece, piece_pos))

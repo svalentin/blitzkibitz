@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <cstdlib> 
+#include <string>
 #include <vector>
 #include <algorithm>
 using namespace std;
@@ -22,7 +23,16 @@ void clrscr(void)
 #endif
 }
 
-void terminal_or_xboard()
+char* getCmdOption(char **begin, char **end, const std::string &option)
+{
+    char **itr = find(begin, end, option);
+    if (itr != end && ++itr != end) {
+        return *itr;
+    }
+    return 0;
+}
+
+void terminal_or_xboard(int normal_max_depth)
 {
 	Board board;
 	board.InitChessboard();
@@ -45,7 +55,7 @@ void terminal_or_xboard()
 		printf("feature analyze=0\n");
 		printf("feature myname=\"BlitzKibitz\"\n");
 		printf("feature done=1\n");
-		XPlay(board);
+		XPlay(normal_max_depth, board);
 		return;
 	}
 	
@@ -84,10 +94,10 @@ void terminal_or_xboard()
 			else {
 				int tstart=clock();
 				if (board.GetPieceCount() < 11) {
-					DEPTH_LIMIT = 8;
+					DEPTH_LIMIT = normal_max_depth+1;
 					if (board.GetPieceCount() < 7)
-						DEPTH_LIMIT = 9;
-					MAX_DEPTH = 7;
+						DEPTH_LIMIT = normal_max_depth+2;
+					MAX_DEPTH = normal_max_depth;
 				}
 				if (startMoves < 4) {
 					startMoves++;
@@ -138,7 +148,13 @@ int main(int argc, char* argv[])
 	initPieces();
 	InitHash();
 	
-	terminal_or_xboard();
+  int default_max_depth = 7;
+  char *default_max_depth_char = getCmdOption(argv, argv + argc, "--depth");
+  if (default_max_depth_char) {
+    default_max_depth = std::atoi(default_max_depth_char);
+  }
+  
+	terminal_or_xboard(default_max_depth);
 
 	return 0;
 }

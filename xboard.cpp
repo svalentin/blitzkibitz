@@ -1,9 +1,9 @@
 #include "xboard.h"
 
-void XPlay(Board &board)
+void XPlay(int normal_max_depth, Board &board)
 {
 	int opponent = 0;
-	char cbuffer[128], cbuff[128];
+	char cbuffer[128];
 	string buffer;
 	Openings Op;
 	Op.InitOpenings("openings.bk");
@@ -20,6 +20,7 @@ void XPlay(Board &board)
 	fprintf(logf, "buffers set to 0\n");
 	int startMoves = 0;
 	int moveNr = 1;
+  fprintf(logf, "Begin - max depth %d\n", normal_max_depth);
 	printf("Begin\n");
 	while (1) {
 		Move m;
@@ -66,14 +67,17 @@ void XPlay(Board &board)
 					opponent = !board.player;
 				}
 				// make sure we don't consider valid xboard commands as errors
-				else if (buffer.find("accepted")!=-1 || buffer.find("random")!=-1) {
+				else if (buffer.find("accepted")!=string::npos
+                 || buffer.find("random")!=string::npos) {
 				}
-				else if (buffer.find("level")!=-1 || buffer.find("hard")!=-1) {
+				else if (buffer.find("level")!=string::npos
+                 || buffer.find("hard")!=string::npos) {
 				}
-				else if (buffer.find("time")!=-1 || buffer.find("otim")!=-1) {
+				else if (buffer.find("time")!=string::npos
+                 || buffer.find("otim")!=string::npos) {
 				}
 				else {
-					fprintf(logf, "eroare :|\n");
+					fprintf(logf, "error :|\n");
 					board.PrintBoard(logf);
 					fflush(logf);
 				}
@@ -90,10 +94,10 @@ void XPlay(Board &board)
 			if (m.flags == ERROR) {
 				int score=0;
 				if (board.GetPieceCount() < 11) {
-					DEPTH_LIMIT = 8;
+					DEPTH_LIMIT = normal_max_depth+1;
 					if (board.GetPieceCount() < 7)
-						DEPTH_LIMIT = 9;
-					MAX_DEPTH = 7;
+						DEPTH_LIMIT = normal_max_depth+2;
+					MAX_DEPTH = normal_max_depth;
 					fprintf(logf, "Playing at %d plies, limit %d\n", MAX_DEPTH, DEPTH_LIMIT);
 				}
 				if (startMoves < 4) {

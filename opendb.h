@@ -5,7 +5,7 @@
 #include "board.h"
 #include "magic.h"
 
-#include<ext/hash_map>
+#include<unordered_map>
 #include<cstring>
 
 using namespace __gnu_cxx;
@@ -34,7 +34,7 @@ class Openings
 {
 	public:
 		~Openings();
-		hash_map<const char*, char*, hash<const char*>, op_eqstr> OpenDB;
+		unordered_map<const char*, char*, hash<const char*>, op_eqstr> OpenDB;
 		void InitOpenings(const char*);
 		Move GetMoveFromDB(Board &b);
 	private:

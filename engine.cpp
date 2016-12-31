@@ -15,9 +15,9 @@ int NegaMax(Board &cboard, int moveNr, int depth)
 	}
 	
 	int bestScore = -INF;
-	vector<Move> mvs = cboard.GetMoves();
+	const vector<Move> mvs = cboard.GetMoves();
 	Board newboard;
-	for (int i=0; i<mvs.size(); ++i) {
+	for (unsigned int i=0; i<mvs.size(); ++i) {
 		newboard = cboard;
 		newboard.MakeMove(mvs[i]);
 		newboard.player = !newboard.player;
@@ -45,11 +45,11 @@ int NegaMaxD(vector<Move> &moves, int moveNr, Board &cboard, int depth)
 	}
 	
 	int bestScore = -INF;
-	vector<Move> mvs = cboard.GetMoves();
+	const vector<Move> mvs = cboard.GetMoves();
 	vector<Move> bm;
 	Board newboard;
 	
-	for (int i=0; i<mvs.size(); ++i) {
+	for (unsigned int i=0; i<mvs.size(); ++i) {
 		newboard = cboard;
 		newboard.MakeMove(mvs[i]);
 		newboard.player = !newboard.player;
@@ -127,7 +127,7 @@ int AlphaBeta(const Board &cboard, const int moveNr, const int max_depth, const 
 	// Get moves and check them
 	
 	bool hexact = false;
-	vector<Move> mvs = cboard.GetMoves();
+	const vector<Move> mvs = cboard.GetMoves();
 	Board newboard;
 	
 	if (mvs.empty()) {
@@ -150,7 +150,7 @@ int AlphaBeta(const Board &cboard, const int moveNr, const int max_depth, const 
 		}
 	}
 	
-	for (int i=0; i<mvs.size(); ++i) {
+	for (unsigned int i=0; i<mvs.size(); ++i) {
 		newboard = cboard;
 		newboard.MakeMove(mvs[i]);
 		newboard.player = !newboard.player;
@@ -194,14 +194,14 @@ int AlphaBetaD(vector<Move> &moves, int moveNr, Board &cboard, int depth, int al
 		return SCalculateScore(cboard);
 	}
 	
-	int tstart = clock();
+	//int tstart = clock();
 	
 	int bestScore = -INF;
-	vector<Move> mvs = cboard.GetMoves();
+	const vector<Move> mvs = cboard.GetMoves();
 	vector<Move> bm;
 	Board newboard;
 	
-	for (int i=0; i<mvs.size(); ++i) {
+	for (unsigned int i=0; i<mvs.size(); ++i) {
 		newboard = cboard;
 		newboard.MakeMove(mvs[i]);
 		newboard.player = !newboard.player;

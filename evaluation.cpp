@@ -43,8 +43,8 @@ inline void evalPawn(const Board &cboard, const int gameStage, int &wscore, int 
 		}
 		
 		// isolated pawns get a penalty
-		if ((col==0 || (col>0 && LSB(cbb[col-1] & cboard.bb[0])) == 64) && 
-			(col==7 || (col<7 && LSB(cbb[col+1] & cboard.bb[0])) == 64)) {
+		if ((col==0 || (col>0 && LSB(cbb[col-1] & cboard.bb[0]) == 64)) && 
+			(col==7 || (col<7 && LSB(cbb[col+1] & cboard.bb[0]) == 64))) {
 			wscore -= IsolatedPawnPenalty[col];
 		}
 	}
@@ -67,27 +67,24 @@ inline void evalPawn(const Board &cboard, const int gameStage, int &wscore, int 
 		}
 
 		// isolated pawns get a penalty
-		if ((col==0 || (col>0 && LSB(cbb[col-1] & cboard.bb[7])) == 64) && 
-			(col==7 || (col<7 && LSB(cbb[col+1] & cboard.bb[7])) == 64)) {
+		if ((col==0 || (col>0 && LSB(cbb[col-1] & cboard.bb[7]) == 64)) && 
+			(col==7 || (col<7 && LSB(cbb[col+1] & cboard.bb[7]) == 64))) {
 			bscore -= IsolatedPawnPenalty[col];
 		}
 	}
 
 }
 
-inline void evalKing(const Board &cboard, const bool gameStage, int &wscore, int &bscore)
+inline void evalKing(const Board &cboard, const int gameStage, int &wscore, int &bscore)
 {
-	int pos = LSB(cboard.bb[KING_W]);
-	if (gameStage > 1)
-		wscore += PiecePositionScore[KING_W+1][63-pos];
-	else
-		wscore += PiecePositionScore[KING_W][63-pos];
+  // In late game, use a different piece position scoring table at KING_W+1  
+  const int piece_position_table = gameStage > 1 ? KING_W+1 : KING_W;
+  
+	const int wpos = LSB(cboard.bb[KING_W]);
+  wscore += PiecePositionScore[piece_position_table][63-wpos];
 		
-	pos = LSB(cboard.bb[KING_B]);
-	if (gameStage > 1)
-		bscore += PiecePositionScore[KING_W+1][63 - (pos%8 + (7-(pos/8))*8)];
-	else
-		bscore += PiecePositionScore[KING_W][63 - (pos%8 + (7-(pos/8))*8)];
+	const int bpos = LSB(cboard.bb[KING_B]);
+	bscore += PiecePositionScore[piece_position_table][63 - (bpos%8 + (7-(bpos/8))*8)];
 }
 
 int CalculateScore(const Board &cboard)

@@ -46,9 +46,9 @@ class Board
 	public:
 
 	ull bb[14];
-	int player;
+	short int player;
 	short int enPassant;
-	int check;
+	short int check;
 	unsigned char castling;
 	// bit1 : rocada pe partea regelui pt alb
 	// bit2 : rocada pe partea reginei pt alb
@@ -98,11 +98,11 @@ int MSB(const ull b);
 
 // NOTE:
 // if all bits are 0, LSB/MSB returns 64 and CLEAR_BIT sets an existing 0 bit to 0.
-// 1<<64 couses overflow, but who cares?
+// 1<<64 causes overflow, but who cares?
 inline int LSBi(ull &b) {int ret = LSB(b); if (ret!=64) CLEAR_BIT(b, ret); return ret;}
 inline int MSBi(ull &b) {int ret = MSB(b); if (ret!=64) CLEAR_BIT(b, ret); return ret;}
 
-// conversie coordonate linie+coloana <--> index bitboard
+// convert coordinates line+column <--> index bitboard
 inline ull COORDS_TO_INDEX(const int x, const int y) {return ((x) << 3) + (y);}
 inline pair<int, int> INDEX_TO_COORDS(const ull pos) {return make_pair(pos/8, pos%8);}
 

@@ -1,11 +1,11 @@
 # BlitzKibitz
 # makefile
 
-@OS = $(shell echo %OS%)
-# on Windows this is 'Windows_NT', on Unix it's empty
+@TERM = $(shell echo %TERM%)
+# on Windows this is empty
 
 CC = g++
-CFLAGS = -s -O3 -ffast-math -fomit-frame-pointer -msse -mfpmath=sse -static-libgcc -Wno-deprecated -Wno-unused-result
+CFLAGS = -s -O3 -Wall -ffast-math -fomit-frame-pointer -msse -mfpmath=sse -static -static-libgcc -static-libstdc++ -Wno-unused-result
 #CFLAGS = -g -msse -DNORAND
 
 # CFLAGS explanation
@@ -71,7 +71,7 @@ run: BlitzKibitz openings.bk
 	./BlitzKibitz
 
 clean:
-ifeq ($(OS),Windows_NT)
+ifndef TERM
 	del BlitzKibitz.exe
 	del *.o
 else

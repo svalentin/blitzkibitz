@@ -8,6 +8,6 @@
 #include "engine.h"
 #include "acn.h"
 
-void XPlay(Board &board);
+void XPlay(int normal_max_depth, Board &board);
 
 #endif

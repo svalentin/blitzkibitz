@@ -23,10 +23,7 @@ class HElem
 	unsigned char npiece;	// number of pieces left on the board
 	
 	// Constructors
-	HElem()
-	{
-		zkey = exact = lbound = score = depth = npiece = 0;
-	}
+	HElem() : zkey(0), exact(0), lbound(0), score(0), depth(0), npiece(0) { }
 	HElem(ull zkey, bool exact, bool lbound, int score,
 		unsigned char depth, unsigned char npiece)
 	{
