@@ -27,7 +27,7 @@ void XPlay(int normal_max_depth, Board &board)
 		if (board.player == opponent || opponent == -1) {
 			fgets(cbuffer, 128, stdin); cbuffer[strlen(cbuffer)-1] = 0;
 			buffer = cbuffer;
-			fprintf(logf, "%s\n", cbuffer);
+			fprintf(logf, "cbuffer: `%s`\n", cbuffer);
 			
 			m.flags = 0;
 			m = DecodeACN(cbuffer, board);
@@ -36,7 +36,6 @@ void XPlay(int normal_max_depth, Board &board)
 				printf("resign\n");
 			}
 			else if (m.flags & ERROR) {
-				fprintf(logf, "%s\n", buffer.c_str());
 				if (buffer == "quit") {
 					fgets(cbuffer, 128, stdin); // make sure there is nothing more to get
 					break;
@@ -75,6 +74,10 @@ void XPlay(int normal_max_depth, Board &board)
 				else if (buffer.find("time")!=string::npos
                  || buffer.find("otim")!=string::npos) {
 				}
+        else if (buffer == "post") {
+          // Turn on thinking/pondering output.
+          // We don't do that so ignore it.
+        }
 				else {
 					fprintf(logf, "error :|\n");
 					board.PrintBoard(logf);
@@ -143,4 +146,7 @@ void XPlay(int normal_max_depth, Board &board)
 		fprintf(logf, "\n");
 	}
 	fprintf(logf, "I'm done!\n");
+  
+  fclose(logf);
+  fclose(loga);
 }
