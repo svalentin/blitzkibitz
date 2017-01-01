@@ -1,6 +1,4 @@
 # BlitzKibitz
-BlitzKibitz - chess engine
-
 BlitzKibitz is a C/C++ chess engine originally started as a university project.
 
 BlitzKibitz doesn't have it's own interface but it is compatible with XBoard protocol.
