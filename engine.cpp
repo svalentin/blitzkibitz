@@ -88,10 +88,16 @@ inline void recordHash(ull zkey, ull pzkey, bool exact, bool lbound, int score,
 
 int hits = 0, hd2 = 0, hd3 = 0;
 // The main function used to search for the best move
-int AlphaBeta(const Board &cboard, const int moveNr, const int max_depth, const int depth, int alpha, int beta)
-{
+pair<int, int> AlphaBeta(
+	const Board &cboard,
+	const int moveNr,
+	const int max_depth,
+	const int depth,
+	int alpha,
+	int beta
+) {
 	if (depth == max_depth) {
-		return SCalculateScore(cboard);
+		return make_pair(SCalculateScore(cboard), 1);
 	}
 
 	// Transposition table stuff
@@ -111,13 +117,13 @@ int AlphaBeta(const Board &cboard, const int moveNr, const int max_depth, const 
 				++hits;
 				if (ht.depth - (max_depth-depth) >= 2) ++hd2;
 				if (ht.depth - (max_depth-depth) >= 3) ++hd3;
-				return ht.score;
+				return make_pair(ht.score, 1);
 			}
 			else {
 				if (ht.lbound && ht.score <= alpha)
-					return alpha;
+					return make_pair(alpha, 1);
 				else if (!ht.lbound && ht.score >= beta)
-					return beta;
+					return make_pair(beta, 1);
 			}
 		}
 	}
@@ -126,38 +132,41 @@ int AlphaBeta(const Board &cboard, const int moveNr, const int max_depth, const 
 
 	bool hexact = false;
 	const vector<Move> mvs = cboard.GetMoves();
-	Board newboard;
 
 	if (mvs.empty()) {
 		if (depth == 0) {
 			BestMove.flags = DRAW;
 		}
 		if (cboard.check == MATE || cboard.check == CHECK) {
-			return -64000+depth;	// mate (the sooner the better)
+			return make_pair(-64000+depth, 1);	// mate (the sooner the better)
 		}
-		else {
-			// stalemate
-			// it's ok only if we're loosing
-			// and the sooner, the better
-			int score = SCalculateScore(cboard);
-			if (score > 500)
-				return -32000+depth;
-			else if (score < -500)
-				return 32000-depth;
-			else return score;
-		}
+
+		// stalemate
+		// it's ok only if we're loosing
+		// and the sooner, the better
+		const int score = SCalculateScore(cboard);
+		if (score > 500)
+			return make_pair(-32000+depth, 1);
+		else if (score < -500)
+			return make_pair(32000-depth, 1);
+		else return make_pair(score, 1);
 	}
 
+	int total_nodes = 0;
 	for (unsigned int i=0; i<mvs.size(); ++i) {
-		newboard = cboard;
+		Board newboard = cboard;
 		newboard.MakeMove(mvs[i]);
 		newboard.player = !newboard.player;
 
-		int score = -AlphaBeta(newboard, moveNr+1, max_depth, depth+1, -beta, -alpha);
+		const pair<int, int> result =
+			AlphaBeta(newboard, moveNr+1, max_depth, depth+1, -beta, -alpha);
+		const int score = -result.first;
+		const int nodes = result.second;
+		total_nodes += nodes;
 
 		if (score >= beta) {
 			recordHash(zkey, pzkey, false, false, beta, max_depth-depth, cboard.GetPieceCount());
-			return beta;
+			return make_pair(beta, total_nodes);
 		}
 		if (score > alpha) {
 			hexact = true;
@@ -171,14 +180,22 @@ int AlphaBeta(const Board &cboard, const int moveNr, const int max_depth, const 
 	// store the key
 	recordHash(zkey, pzkey, hexact, true, alpha, max_depth-depth, cboard.GetPieceCount());
 
-	return alpha;
+	return make_pair(alpha, total_nodes);
 }
 
-int IDDFS(const Board &cboard, const int moveNr, const int max_depth)
-{
+int IDDFS(
+	const Board &cboard,
+	const int moveNr,
+	const int max_depth,
+	const IDDFS_callback_class &callback
+) {
 	int score = 0;
-	for (int cdepth=1; cboard.check != MATE && cdepth<=max_depth; ++cdepth)
-		score = AlphaBeta(cboard, moveNr, cdepth);
+	for (int cdepth=1; cboard.check != MATE && cdepth<=max_depth; ++cdepth) {
+		const pair<int, int> result = AlphaBeta(cboard, moveNr, cdepth);
+		score = result.first;
+		const int nodes = result.second;
+		callback(cdepth, score, nodes);
+	}
 	return score;
 }
 

@@ -1,5 +1,22 @@
 #include "xboard.h"
 
+class IDDFS_logger : public IDDFS_callback_class {
+	FILE *logf;
+
+	public:
+	IDDFS_logger(FILE *logf) : logf(logf) {}
+	void operator()(int depth, int score, int nodes) const {
+		fprintf(logf, "%d %d %d\n", depth, score, nodes);
+	}
+};
+
+class IDDFS_xboard_printer : public IDDFS_callback_class {
+	public:
+	void operator()(int depth, int score, int nodes) const {
+		printf("%d %d %d %d ?\n", depth, score, 0/*time*/, nodes);
+	}
+};
+
 void XPlay(int normal_max_depth, Board &board)
 {
 	int opponent = 0;
@@ -12,6 +29,9 @@ void XPlay(int normal_max_depth, Board &board)
 	FILE *loga = fopen("BlitzKibitz-oponent.log", "wt");
 	setvbuf(logf, 0, _IONBF, 0);
 	setvbuf(loga, 0, _IONBF, 0);
+
+	bool send_iddfs = false;
+	const IDDFS_xboard_printer IDDFS_to_xboard;
 
 	// disable buffer use
 	setvbuf(stdin, 0, _IONBF, 0);
@@ -75,8 +95,10 @@ void XPlay(int normal_max_depth, Board &board)
 								 || buffer.find("otim")!=string::npos) {
 				}
 				else if (buffer == "post") {
-					// Turn on thinking/pondering output.
-					// We don't do that so ignore it.
+					send_iddfs = true;
+				}
+				else if (buffer == "nopost") {
+					send_iddfs = false;
 				}
 				else {
 					fprintf(logf, "error :|\n");
@@ -103,7 +125,11 @@ void XPlay(int normal_max_depth, Board &board)
 					max_depth = max_depth + 1;
 				}
 				fprintf(logf, "Playing at %d plies\n", max_depth);
-				score = IDDFS(board, moveNr, max_depth);
+				if (send_iddfs) {
+					score = IDDFS(board, moveNr, max_depth, IDDFS_to_xboard);
+				} else {
+					score = IDDFS(board, moveNr, max_depth, IDDFS_empty_callback());
+				}
 				m = BestMove;
 				fprintf(logf, "Move #%d\n", moveNr);
 				fprintf(logf, "BestMove has score %d\n", score);

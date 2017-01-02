@@ -18,9 +18,24 @@ int CalculateScore(const Board &cboard);
 
 int NegaMax(Board &cboard, int moveNr, const int max_depth, const int depth=0);
 int NegaMaxD(vector<Move> &moves, int moveNr, Board &cboard, const int max_depth, const int depth);
-int AlphaBeta(const Board &cboard, const int moveNr, const int max_depth, const int depth=0, int alpha=-INF, int beta=INF);
+pair<int, int> AlphaBeta(const Board &cboard, const int moveNr, const int max_depth, const int depth=0, int alpha=-INF, int beta=INF);
 int AlphaBetaD(vector<Move> &moves, Board &cboard, int moveNr, const int max_depth, int depth=0, int alpha=-INF, int beta=INF);
 
-int IDDFS(const Board &cboard, const int moveNr, const int max_depth);
+
+class IDDFS_callback_class {
+	public:
+	virtual void operator()(int depth, int score, int nodes) const = 0;
+};
+class IDDFS_empty_callback : public IDDFS_callback_class {
+	public:
+	void operator()(int depth, int score, int nodes) const {};
+};
+
+int IDDFS(
+	const Board &cboard,
+	const int moveNr,
+	const int max_depth,
+	const IDDFS_callback_class &callback = IDDFS_empty_callback()
+);
 
 #endif
