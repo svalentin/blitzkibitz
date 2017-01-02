@@ -136,9 +136,9 @@ void XPlay(int normal_max_depth, Board &board)
 				}
 				fprintf(logf, "Playing at %d plies\n", max_depth);
 				if (send_iddfs) {
-					score = IDDFS(board, moveNr, max_depth, IDDFS_to_xboard);
+					score = IDDFS(board, max_depth, IDDFS_to_xboard);
 				} else {
-					score = IDDFS(board, moveNr, max_depth, IDDFS_empty_callback());
+					score = IDDFS(board, max_depth, IDDFS_empty_callback());
 				}
 				m = BestMove;
 				fprintf(logf, "Move #%d\n", moveNr);

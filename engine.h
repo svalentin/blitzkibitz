@@ -16,10 +16,10 @@ extern int hits, hd2, hd3;
 
 int CalculateScore(const Board &cboard);
 
-int NegaMax(Board &cboard, int moveNr, const int max_depth, const int depth=0);
-int NegaMaxD(vector<Move> &moves, int moveNr, Board &cboard, const int max_depth, const int depth);
-pair<int, int> AlphaBeta(const Board &cboard, const int moveNr, const int max_depth, const int depth=0, int alpha=-INF, int beta=INF);
-int AlphaBetaD(vector<Move> &moves, Board &cboard, int moveNr, const int max_depth, int depth=0, int alpha=-INF, int beta=INF);
+int NegaMax(Board &cboard, const int max_depth, const int depth=0);
+int NegaMaxD(vector<Move> &moves, Board &cboard, const int max_depth, const int depth);
+pair<int, int> AlphaBeta(const Board &cboard, const int max_depth, const int depth=0, int alpha=-INF, int beta=INF);
+int AlphaBetaD(vector<Move> &moves, Board &cboard, const int max_depth, int depth=0, int alpha=-INF, int beta=INF);
 
 
 class IDDFS_callback_class {
@@ -33,7 +33,6 @@ class IDDFS_empty_callback : public IDDFS_callback_class {
 
 int IDDFS(
 	const Board &cboard,
-	const int moveNr,
 	const int max_depth,
 	const IDDFS_callback_class &callback = IDDFS_empty_callback()
 );

@@ -79,11 +79,11 @@ void terminal_or_xboard(int normal_max_depth)
 					max_depth = max_depth + 1;
 				}
 				//vector<Move> moves;
-				//score = NegaMaxD(moves, moveNr, board, max_depth, 0);
-				//score = NegaMax(board, moveNr, max_depth);
-				//score = AlphaBeta(board, moveNr, max_depth);
-				score = IDDFS(board, moveNr, max_depth);
-				//score = AlphaBetaD(moves, moveNr, board);
+				//score = NegaMaxD(moves, board, max_depth, 0);
+				//score = NegaMax(board, max_depth);
+				//score = AlphaBeta(board, max_depth);
+				score = IDDFS(board, max_depth);
+				//score = AlphaBetaD(moves, board);
 				printf("BestMove has score %d - calc in %.3fs\n", score, (double)(clock() - tstart) / CLOCKS_PER_SEC);
 				m = BestMove;
 				//for (int i=0; i<moves.size(); ++i)

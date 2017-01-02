@@ -63,13 +63,16 @@ class Move {
 		if (b.check == MATE) return false;
 		if (check == MATE) return true;
 
-		if (b.check == CHECK) return false;
-		if (check == CHECK) return true;
-
-		if (flags == CAPTURE && b.flags == CAPTURE) {
-			return PieceMap[piece] < PieceMap[b.piece];
+		if (check == CHECK && b.check == CHECK) {
+			return PieceMap[piece] > PieceMap[b.piece];
+		}
+		if (check == CHECK || b.check == CHECK) {
+			return (check == CHECK) > (b.check == CHECK);
 		}
 
+		if (flags == CAPTURE && b.flags == CAPTURE) {
+			return PieceMap[piece] > PieceMap[b.piece];
+		}
 		if (flags == CAPTURE || b.flags == CAPTURE) {
 			return (flags == CAPTURE) > (b.flags == CAPTURE);
 		}
@@ -78,7 +81,7 @@ class Move {
 			return promote_to > b.promote_to;
 		}
 
-		return PieceMap[piece] < PieceMap[b.piece];
+		return PieceMap[piece] > PieceMap[b.piece];
 	}
 };
 
