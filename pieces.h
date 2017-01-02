@@ -29,8 +29,8 @@
 #define DRAW				32
 #define CAPTURE				64
 #define PROMOTION			128
-#define NO_Q_CASTLE			256
-#define NO_K_CASTLE			512
+//#define NO_Q_CASTLE			256
+//#define NO_K_CASTLE			512
 #define ERROR				1024
 
 
@@ -45,8 +45,7 @@ class Board;
 extern map<char, int> PieceMap;
 extern map<int, char> PieceIndexMap;
 
-class Move
-{
+class Move {
 	public:
 	int source;			// source bit index on a 64-bit board
 	int destination;	// destination bit index on a 64-bit board
@@ -57,13 +56,10 @@ class Move
 	int player;			// 0 = WHITE  and  1 = BLACK
 	bool FindCoordinates(Board &b);
 
-	Move()
-	{
-		source = destination = piece = flags = check = promote_to = player = 0;
-	}
+	Move() : source(0), destination(0), piece(0), flags(0), check(0),
+	         promote_to(0), player(0) { }
 
-	const bool operator<(const Move &b) const
-	{
+	const bool operator<(const Move &b) const {
 		if (b.check == MATE) return false;
 		if (check == MATE) return true;
 
@@ -73,15 +69,16 @@ class Move
 		if (flags == CAPTURE && b.flags == CAPTURE) {
 			return PieceMap[piece] < PieceMap[b.piece];
 		}
-		else {
-			if (flags != CAPTURE && b.flags != CAPTURE) {
-				if (promote_to == 0 && b.promote_to == 0) {
-					return PieceMap[piece] < PieceMap[b.piece];
-				}
-				else return promote_to > b.promote_to;
-			}
-			else return (flags == CAPTURE && b.flags != CAPTURE);
+
+		if (flags == CAPTURE || b.flags == CAPTURE) {
+			return (flags == CAPTURE) > (b.flags == CAPTURE);
 		}
+
+		if (promote_to != 0 || b.promote_to != 0) {
+			return promote_to > b.promote_to;
+		}
+
+		return PieceMap[piece] < PieceMap[b.piece];
 	}
 };
 

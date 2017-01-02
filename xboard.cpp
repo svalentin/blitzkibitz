@@ -37,10 +37,21 @@ void XPlay(int normal_max_depth, Board &board)
 	setvbuf(stdin, 0, _IONBF, 0);
 	setvbuf(stdout, 0, _IONBF, 0);
 
-	fprintf(logf, "buffers set to 0\n");
 	int moveNr = 1;
 	fprintf(logf, "Begin - max depth %d\n", normal_max_depth);
+
+	printf("feature san=1\n");
+	printf("feature sigint=0\n");
+	printf("feature sigterm=0\n");
+	printf("feature name=0\n");
+	printf("feature time=0\n");
+	printf("feature draw=0\n");
+	printf("feature reuse=0\n");
+	printf("feature analyze=0\n");
+	printf("feature myname=\"BlitzKibitz\"\n");
+	printf("feature done=1\n");
 	printf("Begin\n");
+
 	while (1) {
 		Move m;
 
@@ -51,7 +62,6 @@ void XPlay(int normal_max_depth, Board &board)
 
 			m.flags = 0;
 			m = DecodeACN(cbuffer, board);
-//			fprintf(logf, "DecodeACN finished with m.flags=%d\n", m.flags);
 			if (m.check == MATE) {
 				printf("resign\n");
 			}

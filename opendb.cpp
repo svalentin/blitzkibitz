@@ -47,7 +47,7 @@ Move Openings::GetMoveFromDB(Board &board)
 	mv.destination = COORDS_TO_INDEX(mvch[3] - '1', 'h' - mvch[2]);
 
 	// promotion
-	if (mvch[5] != 0) {
+	if (mvch.size() > 5) {
 		mv.flags |= PROMOTION;
 		switch (mvch[5]) {
 			case 'q': mv.promote_to = 'Q'; break;
@@ -62,16 +62,16 @@ Move Openings::GetMoveFromDB(Board &board)
 	if (piecetype > 5) piecetype -= 7;
 	mv.piece = PieceIndexMap[piecetype];
 
-	if (piecetype == 5 && mv.source == 59 && mv.destination == 57) {
+	if (piecetype == KING_W && mv.source == 59 && mv.destination == 57) {
 		mv.flags |= KING_SIDE_CASTLE;
 	}
-	else if (piecetype == 5 && mv.source == 3 && mv.destination == 1) {
+	else if (piecetype == KING_W && mv.source == 3 && mv.destination == 1) {
 		mv.flags |= KING_SIDE_CASTLE;
 	}
-	else if (piecetype == 5 && mv.source == 59 && mv.destination == 61) {
+	else if (piecetype == KING_W && mv.source == 59 && mv.destination == 61) {
 		mv.flags |= QUEEN_SIDE_CASTLE;
 	}
-	else if (piecetype == 5 && mv.source == 3 && mv.destination == 5) {
+	else if (piecetype == KING_W && mv.source == 3 && mv.destination == 5) {
 		mv.flags |= QUEEN_SIDE_CASTLE;
 	}
 

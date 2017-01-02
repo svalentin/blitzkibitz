@@ -166,12 +166,12 @@ int Board::MakeMove(const Move mv)
 	if (mv.check == MATE)
 		check |= MATE;
 
-	if (mv.flags == KING_SIDE_CASTLE) {
+	if (mv.flags & KING_SIDE_CASTLE) {
 		applyCastling(make_pair(0,2), make_pair(3,1));
 		return 0;
 	}
 
-	if (mv.flags == QUEEN_SIDE_CASTLE) {
+	if (mv.flags & QUEEN_SIDE_CASTLE) {
 		applyCastling(make_pair(7,4), make_pair(3,5));
 		return 0;
 	}
@@ -268,35 +268,35 @@ const bool Board::VerifyChess(const ull pos, const int side) const
 	ull occ = GetOccupancy();
 
 	// KNIGHT
-	piece = 1 + 7*side;
+	piece = KNIGHT_W + 7*side;
 	bb_cpy = bb[piece];
 	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy))
 		if (pos & Nmagic(piece_pos))
 			return true;
 
 	// BISHOP
-	piece = 2 + 7*side;
+	piece = BISHOP_W + 7*side;
 	bb_cpy = bb[piece];
 	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy))
 		if (pos & Bmagic(piece_pos, occ))
 			return true;
 
 	// ROCK
-	piece = 3 + 7*side;
+	piece = ROOK_W + 7*side;
 	bb_cpy = bb[piece];
 	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy))
 		if (pos & Rmagic(piece_pos, occ))
 			return true;
 
 	// QUEEN
-	piece = 4 + 7*side;
+	piece = QUEEN_W + 7*side;
 	bb_cpy = bb[piece];
 	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy))
 		if (pos & Qmagic(piece_pos, occ))
 			return true;
 
 	// KING
-	piece = 5 + 7*side;
+	piece = KING_W + 7*side;
 	bb_cpy = bb[piece];
 	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy))
 		if (pos & Kmagic(piece_pos))
@@ -304,7 +304,7 @@ const bool Board::VerifyChess(const ull pos, const int side) const
 
 	// PAWNS
 	int pl = side ? -1 : 1;
-	piece = 0 + 7*side;
+	piece = PAWN_W + 7*side;
 	bb_cpy = bb[piece];
 
 	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy)) {
@@ -447,7 +447,7 @@ vector<Move> Board::GetMoves() const
 	occ = GetOccupancy();
 
 	// kNight
-	piece = 1 + 7*player;
+	piece = KNIGHT_W + 7*player;
 	bb_cpy = bb[piece];
 	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy)) {
 		if (appendMoves(M, Nmagic(piece_pos), piece, piece_pos))
@@ -455,7 +455,7 @@ vector<Move> Board::GetMoves() const
 	}
 
 	// Bishop
-	piece = 2 + 7*player;
+	piece = BISHOP_W + 7*player;
 	bb_cpy = bb[piece];
 	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy)) {
 		if (appendMoves(M, Bmagic(piece_pos, occ), piece, piece_pos))
@@ -463,7 +463,7 @@ vector<Move> Board::GetMoves() const
 	}
 
 	// Rock
-	piece = 3 + 7*player;
+	piece = ROOK_W + 7*player;
 	bb_cpy = bb[piece];
 	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy)) {
 		if (appendMoves(M, Rmagic(piece_pos, occ), piece, piece_pos))
@@ -471,7 +471,7 @@ vector<Move> Board::GetMoves() const
 	}
 
 	// Queen
-	piece = 4 + 7*player;
+	piece = QUEEN_W + 7*player;
 	bb_cpy = bb[piece];
 	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy)) {
 		if (appendMoves(M, Qmagic(piece_pos, occ), piece, piece_pos))
@@ -479,7 +479,7 @@ vector<Move> Board::GetMoves() const
 	}
 
 	// King
-	piece = 5 + 7*player;
+	piece = KING_W + 7*player;
 	bb_cpy = bb[piece];
 	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy)) {
 		if (appendMoves(M, Kmagic(piece_pos), piece, piece_pos))
@@ -529,7 +529,7 @@ vector<Move> Board::GetMoves() const
 	int poss;
 
 	pl = player ? -1 : 1;
-	piece = 0 + 7*player;
+	piece = PAWN_W + 7*player;
 	bb_cpy = bb[piece];
 
 	for (piece_pos = LSBi(bb_cpy); piece_pos != 64; piece_pos = LSBi(bb_cpy)) {

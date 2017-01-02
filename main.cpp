@@ -14,15 +14,6 @@ using namespace std;
 #include "acn.h"
 #include "xboard.h"
 
-void clrscr(void)
-{
-#ifndef __linux__
-	system("CLS");
-#else
-	system("clear");
-#endif
-}
-
 char* getCmdOption(char **begin, char **end, const std::string &option)
 {
 	char **itr = find(begin, end, option);
@@ -45,16 +36,6 @@ void terminal_or_xboard(int normal_max_depth)
 
 	// if we don't recieve a color, then turn to xboard mode!
 	if (!sscanf(com, "%d", &opponent)) {
-		printf("feature san=1\n");
-		printf("feature sigint=0\n");
-		printf("feature sigterm=0\n");
-		printf("feature name=0\n");
-		printf("feature time=0\n");
-		printf("feature draw=0\n");
-		printf("feature reuse=0\n");
-		printf("feature analyze=0\n");
-		printf("feature myname=\"BlitzKibitz\"\n");
-		printf("feature done=1\n");
 		XPlay(normal_max_depth, board);
 		return;
 	}
@@ -67,8 +48,6 @@ void terminal_or_xboard(int normal_max_depth)
 	Op.InitOpenings("openings.bk");
 
 	int moveNr = 1;
-	int startMoves = 0;
-	int score = 0;
 	while (board.check != MATE) {
 		Move m;
 
@@ -78,9 +57,7 @@ void terminal_or_xboard(int normal_max_depth)
 			if (strcmp(com, "quit") == 0) break;
 			if (strcmp(com, "q") == 0) break;
 
-			m.flags = 0;
 			m = DecodeACN(com, board);
-			clrscr();
 		}
 		else {
 			moveNr += 2;
@@ -93,14 +70,12 @@ void terminal_or_xboard(int normal_max_depth)
 			}
 			else {
 				int tstart = clock();
+				int score = 0;
 				int max_depth = normal_max_depth;
+				if (moveNr < 8) {
+					max_depth = max_depth + 1;
+				}
 				if (board.GetPieceCount() < 11) {
-					max_depth = max_depth + 1;
-				}
-				if (board.GetPieceCount() < 7) {
-					max_depth = max_depth + 1;
-				}
-				if (startMoves < 4) {
 					max_depth = max_depth + 1;
 				}
 				//vector<Move> moves;
@@ -118,10 +93,6 @@ void terminal_or_xboard(int normal_max_depth)
 			string enc = EncodeACN(m, board);
 			printf("move %s\n", enc.c_str());
 		}
-
-		if (strcmp(com, "quit") == 0) break;
-		if (strcmp(com, "q") == 0) break;
-
 
 		if (!(m.flags & ERROR)) {
 			board.MakeMove(m);
